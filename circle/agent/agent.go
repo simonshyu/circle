@@ -2,7 +2,7 @@ package agent
 
 import (
 	"context"
-	"github.com/SimonXming/circle/utils"
+	"github.com/SimonXming/pipeline/pipeline/interrupt"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
@@ -25,7 +25,7 @@ func loop(c *cli.Context) error {
 
 	sigterm := abool.New()
 	ctx := context.Background()
-	ctx = utils.WithContextFunc(ctx, func() {
+	ctx = interrupt.WithContextFunc(ctx, func() {
 		println("ctrl+c received, terminating process")
 		sigterm.Set()
 	})

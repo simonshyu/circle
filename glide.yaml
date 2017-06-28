@@ -5,3 +5,5 @@ import:
 - package: github.com/labstack/echo
   version: ~3.1
 - package: github.com/tevino/abool
+- package: github.com/SimonXming/pipeline
+  version: ^1.0.0-alpha
