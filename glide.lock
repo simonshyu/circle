@@ -1,15 +1,21 @@
-hash: 11503235ae90695620246558755d35722bb3255081dbf2940c5e264883879ffd
-updated: 2017-06-28T23:45:37.856254732+08:00
+hash: 466938cc059f8d072b79b14410f735d58c0fab11a570252fa07e5c3d533e0a33
+updated: 2017-06-28T23:55:34.485566088+08:00
 imports:
+- name: github.com/dgrijalva/jwt-go
+  version: 2268707a8f0843315e2004ee4f1d021dc08baedf
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/labstack/echo
   version: 1049c9613cd371b7ea8f219404c9a821734781ed
+  subpackages:
+  - middleware
 - name: github.com/labstack/gommon
   version: 1121fd3e243c202482226a7afe4dcd07ffc4139a
   subpackages:
+  - bytes
   - color
   - log
+  - random
 - name: github.com/mattn/go-colorable
   version: 941b50ebc6efddf4c41c8e4537a5f68a4e686b24
 - name: github.com/mattn/go-isatty
@@ -42,7 +48,6 @@ imports:
   subpackages:
   - context
   - context/ctxhttp
-  - websocket
 - name: golang.org/x/sys
   version: 90796e5a05ce440b41c768bd9af257005e470461
   subpackages:

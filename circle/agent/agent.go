@@ -20,9 +20,18 @@ var Command = cli.Command{
 
 func loop(c *cli.Context) error {
 	endpoint := "ws://localhost:8000/ws/broker"
+	filter := rpc.Filter{
+		Labels: map[string]string{
+			"platform": "linux",
+		},
+	}
 	client, err := rpc.NewClient(
 		endpoint,
 	)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
 
 	sigterm := abool.New()
 	ctx := context.Background()
@@ -42,7 +51,7 @@ func loop(c *cli.Context) error {
 				if sigterm.IsSet() {
 					return
 				}
-				if err := run(ctx); err != nil {
+				if err := run(ctx, client, filter); err != nil {
 					log.Printf("build runner encountered error: exiting: %s", err)
 					return
 				}
@@ -53,8 +62,13 @@ func loop(c *cli.Context) error {
 	return nil
 }
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
 	time.Sleep(time.Second * 5)
+	work, err := client.Next(ctx, filter)
+	if err != nil {
+		return err
+	}
+	println(work)
 	return nil
 }
