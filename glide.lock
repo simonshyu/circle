@@ -1,6 +1,8 @@
-hash: e1454aa36ad1caf03735bbb4e551b784150becc7e81fdda532533d63b2bdb76b
-updated: 2017-06-28T23:14:39.374931777+08:00
+hash: 466938cc059f8d072b79b14410f735d58c0fab11a570252fa07e5c3d533e0a33
+updated: 2017-06-28T23:33:01.852484978+08:00
 imports:
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/labstack/echo
   version: 1049c9613cd371b7ea8f219404c9a821734781ed
 - name: github.com/labstack/gommon
@@ -13,9 +15,15 @@ imports:
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/SimonXming/pipeline
-  version: 848543dbae04fca6d0202cec8ffbf96e8011c0ae
+  version: 71cf8b1e11f3772aaae1eb918f2279eeda2e9bda
   subpackages:
+  - pipeline/backend
   - pipeline/interrupt
+  - pipeline/rpc
+- name: github.com/sourcegraph/jsonrpc2
+  version: b02337b177765febba753be4b7d9c26e3a9fd220
+  subpackages:
+  - websocket
 - name: github.com/tevino/abool
   version: 3c25f2fe7cd0ef3eabefce1d90efd69a65d35b12
 - name: github.com/urfave/cli
@@ -34,6 +42,7 @@ imports:
   subpackages:
   - context
   - context/ctxhttp
+  - websocket
 - name: golang.org/x/sys
   version: 90796e5a05ce440b41c768bd9af257005e470461
   subpackages:

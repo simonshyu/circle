@@ -3,7 +3,7 @@ package linter
 import (
 	"testing"
 
-	"github.com/cncd/pipeline/pipeline/frontend/yaml"
+	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 	libcompose "github.com/docker/libcompose/yaml"
 )
 
@@ -87,6 +87,10 @@ func TestLintErrors(t *testing.T) {
 		{
 			from: "pipeline: { build: { image: golang, volumes: [ '/opt/data:/var/lib/mysql' ] }  }",
 			want: "Insufficient privileges to use volumes",
+		},
+		{
+			from: "pipeline: { build: { image: golang, network_mode: 'container:name' }  }",
+			want: "Insufficient privileges to use network_mode",
 		},
 		// cannot override entypoint, command for script steps
 		{

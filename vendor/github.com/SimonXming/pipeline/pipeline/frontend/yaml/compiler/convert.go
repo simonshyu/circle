@@ -3,9 +3,10 @@ package compiler
 import (
 	"fmt"
 	"path"
+	"strings"
 
-	"github.com/cncd/pipeline/pipeline/backend"
-	"github.com/cncd/pipeline/pipeline/frontend/yaml"
+	"github.com/SimonXming/pipeline/pipeline/backend"
+	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 )
 
 func (c *Compiler) createProcess(name string, container *yaml.Container) *backend.Step {
@@ -13,19 +14,25 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		detached   bool
 		workingdir string
 
-		workspace  = fmt.Sprintf("%s_default:%s", c.prefix, c.base)
-		privileged = container.Privileged
-		entrypoint = container.Entrypoint
-		command    = container.Command
-		image      = expandImage(container.Image)
+		workspace    = fmt.Sprintf("%s_default:%s", c.prefix, c.base)
+		privileged   = container.Privileged
+		entrypoint   = container.Entrypoint
+		command      = container.Command
+		image        = expandImage(container.Image)
+		network_mode = container.NetworkMode
 		// network    = container.Network
 	)
 
 	networks := []backend.Conn{
 		backend.Conn{
 			Name:    fmt.Sprintf("%s_default", c.prefix),
-			Aliases: c.aliases,
+			Aliases: []string{container.Name},
 		},
+	}
+	for _, network := range c.networks {
+		networks = append(networks, backend.Conn{
+			Name: network,
+		})
 	}
 
 	var volumes []string
@@ -36,14 +43,6 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	for _, volume := range container.Volumes.Volumes {
 		volumes = append(volumes, volume.String())
 	}
-	// if network == "" {
-	// 	network = fmt.Sprintf("%s_default", c.prefix)
-	// 	for _, alias := range c.aliases {
-	// 		// if alias != container.Name {
-	// 		aliases = append(aliases, alias)
-	// 		// }
-	// 	}
-	// } // host, bridge, none, container:<name>, overlay
 
 	// append default environment variables
 	environment := map[string]string{}
@@ -60,6 +59,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	}
 
 	environment["CI_WORKSPACE"] = path.Join(c.base, c.path)
+	// TODO: This is here for backward compatibility and will eventually be removed.
 	environment["DRONE_WORKSPACE"] = path.Join(c.base, c.path)
 
 	if !isService(container) {
@@ -73,7 +73,7 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 	if isPlugin(container) {
 		paramsToEnv(container.Vargs, environment)
 
-		if imageMatches(container.Image, c.escalated) {
+		if matchImage(container.Image, c.escalated...) {
 			privileged = true
 			entrypoint = []string{}
 			command = []string{}
@@ -86,6 +86,52 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		environment["CI_SCRIPT"] = generateScriptPosix(container.Commands)
 		environment["HOME"] = "/root"
 		environment["SHELL"] = "/bin/sh"
+	}
+
+	authConfig := backend.Auth{
+		Username: container.AuthConfig.Username,
+		Password: container.AuthConfig.Password,
+		Email:    container.AuthConfig.Email,
+	}
+	for _, registry := range c.registries {
+		if matchHostname(image, registry.Hostname) {
+			authConfig.Username = registry.Username
+			authConfig.Password = registry.Password
+			authConfig.Email = registry.Email
+			break
+		}
+	}
+
+	for _, requested := range container.Secrets.Secrets {
+		secret, ok := c.secrets[strings.ToLower(requested.Source)]
+		if ok && (len(secret.Match) == 0 || matchImage(image, secret.Match...)) {
+			environment[strings.ToUpper(requested.Target)] = secret.Value
+		}
+	}
+
+	memSwapLimit := int64(container.MemSwapLimit)
+	if c.reslimit.MemSwapLimit != 0 {
+		memSwapLimit = c.reslimit.MemSwapLimit
+	}
+	memLimit := int64(container.MemLimit)
+	if c.reslimit.MemLimit != 0 {
+		memLimit = c.reslimit.MemLimit
+	}
+	shmSize := int64(container.ShmSize)
+	if c.reslimit.ShmSize != 0 {
+		shmSize = c.reslimit.ShmSize
+	}
+	cpuQuota := int64(container.CPUQuota)
+	if c.reslimit.CPUQuota != 0 {
+		cpuQuota = c.reslimit.CPUQuota
+	}
+	cpuShares := int64(container.CPUShares)
+	if c.reslimit.CPUShares != 0 {
+		cpuShares = c.reslimit.CPUShares
+	}
+	cpuSet := container.CPUSet
+	if c.reslimit.CPUSet != "" {
+		cpuSet = c.reslimit.CPUSet
 	}
 
 	return &backend.Step{
@@ -106,32 +152,19 @@ func (c *Compiler) createProcess(name string, container *yaml.Container) *backen
 		Networks:     networks,
 		DNS:          container.DNS,
 		DNSSearch:    container.DNSSearch,
-		MemSwapLimit: int64(container.MemSwapLimit),
-		MemLimit:     int64(container.MemLimit),
-		ShmSize:      int64(container.ShmSize),
-		CPUQuota:     int64(container.CPUQuota),
-		CPUShares:    int64(container.CPUShares),
-		CPUSet:       container.CPUSet,
-		AuthConfig: backend.Auth{
-			Username: container.AuthConfig.Username,
-			Password: container.AuthConfig.Password,
-			Email:    container.AuthConfig.Email,
-		},
-		OnSuccess: container.Constraints.Status.Match("success"),
+		MemSwapLimit: memSwapLimit,
+		MemLimit:     memLimit,
+		ShmSize:      shmSize,
+		CPUQuota:     cpuQuota,
+		CPUShares:    cpuShares,
+		CPUSet:       cpuSet,
+		AuthConfig:   authConfig,
+		OnSuccess:    container.Constraints.Status.Match("success"),
 		OnFailure: (len(container.Constraints.Status.Include)+
 			len(container.Constraints.Status.Exclude) != 0) &&
 			container.Constraints.Status.Match("failure"),
+		NetworkMode: network_mode,
 	}
-}
-
-func imageMatches(image string, to []string) bool {
-	image = trimImage(image)
-	for _, i := range to {
-		if image == i {
-			return true
-		}
-	}
-	return false
 }
 
 func isPlugin(c *yaml.Container) bool {

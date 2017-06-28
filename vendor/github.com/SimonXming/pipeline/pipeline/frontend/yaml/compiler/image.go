@@ -28,9 +28,19 @@ func expandImage(name string) string {
 func matchImage(from string, to ...string) bool {
 	from = trimImage(from)
 	for _, match := range to {
-		if from == match {
+		if from == trimImage(match) {
 			return true
 		}
 	}
 	return false
+}
+
+// matchHostname returns true if the image hostname
+// matches the specified hostname.
+func matchHostname(image, hostname string) bool {
+	ref, err := reference.ParseNamed(image)
+	if err != nil {
+		return false
+	}
+	return ref.Hostname() == hostname
 }

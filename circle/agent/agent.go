@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
+	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
@@ -18,10 +19,10 @@ var Command = cli.Command{
 }
 
 func loop(c *cli.Context) error {
-	// endpoint := "ws://localhost:8000/ws/broker"
-	// client, err := rpc.NewClient(
-	// 	endpoint,
-	// )
+	endpoint := "ws://localhost:8000/ws/broker"
+	client, err := rpc.NewClient(
+		endpoint,
+	)
 
 	sigterm := abool.New()
 	ctx := context.Background()

@@ -138,12 +138,12 @@ func TestMatchImage(t *testing.T) {
 		{
 			from: "golang",
 			to:   "golang:latest",
-			want: false,
+			want: true,
 		},
 		{
 			from: "library/golang:latest",
 			to:   "library/golang",
-			want: false,
+			want: true,
 		},
 		{
 			from: "gcr.io/golang",
@@ -163,6 +163,26 @@ func TestMatchImage(t *testing.T) {
 		{
 			from: "gcr.io/golang",
 			to:   "gcr.io/golang:latest",
+			want: true,
+		},
+		{
+			from: "golang",
+			to:   "library/golang",
+			want: true,
+		},
+		{
+			from: "golang",
+			to:   "gcr.io/project/golang",
+			want: false,
+		},
+		{
+			from: "golang",
+			to:   "gcr.io/library/golang",
+			want: false,
+		},
+		{
+			from: "golang",
+			to:   "gcr.io/golang",
 			want: false,
 		},
 	}
@@ -170,6 +190,55 @@ func TestMatchImage(t *testing.T) {
 		got, want := matchImage(test.from, test.to), test.want
 		if got != want {
 			t.Errorf("Want image %q matching %q is %v", test.from, test.to, want)
+		}
+	}
+}
+
+func TestMatchHostname(t *testing.T) {
+	testdata := []struct {
+		image, hostname string
+		want            bool
+	}{
+		{
+			image:    "golang",
+			hostname: "docker.io",
+			want:     true,
+		},
+		{
+			image:    "golang:latest",
+			hostname: "docker.io",
+			want:     true,
+		},
+		{
+			image:    "library/golang:latest",
+			hostname: "docker.io",
+			want:     true,
+		},
+		{
+			image:    "docker.io/library/golang:1.0.0",
+			hostname: "docker.io",
+			want:     true,
+		},
+		{
+			image:    "gcr.io/golang",
+			hostname: "docker.io",
+			want:     false,
+		},
+		{
+			image:    "gcr.io/golang:1.0.0",
+			hostname: "gcr.io",
+			want:     true,
+		},
+		{
+			image:    "1.2.3.4:8000/golang:1.0.0",
+			hostname: "1.2.3.4:8000",
+			want:     true,
+		},
+	}
+	for _, test := range testdata {
+		got, want := matchHostname(test.image, test.hostname), test.want
+		if got != want {
+			t.Errorf("Want image %q matching hostname %q is %v", test.image, test.hostname, want)
 		}
 	}
 }

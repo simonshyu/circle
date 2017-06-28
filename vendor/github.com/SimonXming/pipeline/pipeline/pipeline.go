@@ -6,8 +6,8 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/cncd/pipeline/pipeline/backend"
-	"github.com/cncd/pipeline/pipeline/multipart"
+	"github.com/SimonXming/pipeline/pipeline/backend"
+	"github.com/SimonXming/pipeline/pipeline/multipart"
 )
 
 type (

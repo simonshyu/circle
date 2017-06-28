@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 const (
 	methodNext   = "next"
 	methodWait   = "wait"
+	methodInit   = "init"
 	methodDone   = "done"
 	methodExtend = "extend"
 	methodUpdate = "update"
@@ -28,8 +28,7 @@ const (
 type (
 	uploadReq struct {
 		ID   string `json:"id"`
-		Mime string `json:"mime"`
-		Data []byte `json:"data"`
+		File *File  `json:"file"`
 	}
 
 	updateReq struct {
@@ -58,6 +57,7 @@ type Client struct {
 	backoff  time.Duration
 	endpoint string
 	token    string
+	headers  map[string][]string
 }
 
 // NewClient returns a new Client.
@@ -66,6 +66,7 @@ func NewClient(endpoint string, opts ...Option) (*Client, error) {
 		endpoint: endpoint,
 		retry:    defaultRetryClount,
 		backoff:  defaultBackoff,
+		headers:  map[string][]string{},
 	}
 	for _, opt := range opts {
 		opt(cli)
@@ -90,9 +91,16 @@ func (t *Client) Wait(c context.Context, id string) error {
 	return t.call(c, methodWait, id, nil)
 }
 
+// Init signals the pipeline is initialized.
+func (t *Client) Init(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodInit, &params, nil)
+}
+
 // Done signals the pipeline is complete.
-func (t *Client) Done(c context.Context, id string) error {
-	return t.call(c, methodDone, id, nil)
+func (t *Client) Done(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodDone, &params, nil)
 }
 
 // Extend extends the pipeline deadline.
@@ -113,12 +121,8 @@ func (t *Client) Log(c context.Context, id string, line *Line) error {
 }
 
 // Upload uploads the pipeline artifact.
-func (t *Client) Upload(c context.Context, id, mime string, file io.Reader) error {
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	params := uploadReq{id, mime, data}
+func (t *Client) Upload(c context.Context, id string, file *File) error {
+	params := uploadReq{id, file}
 	return t.call(c, methodUpload, params, nil)
 }
 
@@ -177,6 +181,9 @@ func (t *Client) open() error {
 	header := map[string][]string{
 		"Content-Type":  {"application/json-rpc"},
 		"Authorization": {"Bearer " + t.token},
+	}
+	for key, value := range t.headers {
+		header[key] = value
 	}
 	conn, _, err := websocket.DefaultDialer.Dial(t.endpoint, http.Header(header))
 	if err != nil {

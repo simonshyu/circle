@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cncd/pipeline/pipeline/backend"
+	"github.com/SimonXming/pipeline/pipeline/backend"
 )
 
 // Parse parses the pipeline config from an io.Reader.

@@ -5,7 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/cncd/pipeline/pipeline/backend"
+	"github.com/SimonXming/pipeline/pipeline/backend"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
@@ -103,12 +103,14 @@ func (e *engine) Exec(proc *backend.Step) error {
 		return err
 	}
 
-	for _, net := range proc.Networks {
-		err = e.client.NetworkConnect(ctx, net.Name, proc.Name, &network.EndpointSettings{
-			Aliases: net.Aliases,
-		})
-		if err != nil {
-			return err
+	if len(proc.NetworkMode) == 0 {
+		for _, net := range proc.Networks {
+			err = e.client.NetworkConnect(ctx, net.Name, proc.Name, &network.EndpointSettings{
+				Aliases: net.Aliases,
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

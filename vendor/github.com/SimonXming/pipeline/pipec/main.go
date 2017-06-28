@@ -12,7 +12,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "pipec"
-	app.Usage = "pipec provides command line tools for the cncd runtime"
+	app.Usage = "pipec provides command line tools for the some tool runtime"
 	app.Commands = []cli.Command{
 		compileCommand,
 		executeCommand,

@@ -3,7 +3,7 @@ package linter
 import (
 	"fmt"
 
-	"github.com/cncd/pipeline/pipeline/frontend/yaml"
+	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 )
 
 // A Linter lints a pipeline configuration.
