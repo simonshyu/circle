@@ -62,6 +62,19 @@ func loop(c *cli.Context) error {
 	return nil
 }
 
+/*
+run 方法是 agent 的主要运行逻辑
+1. 获取一个 job
+2. 创建一个 docker engine
+3. 处理等待 job 完成的逻辑(正确或错误)
+4. 初始化 job
+5. 给本次 job 设置 logger 和 tracer
+6. 根据这次 job 的配置信息初始化 pipeline
+7. 运行 pipeline 并实时更新 pipeline 状态
+8. 完成 pipeline
+9. 通过 connection 同步 pipelone 状态
+*/
+
 func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
 	time.Sleep(time.Second * 5)
