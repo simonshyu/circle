@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/SimonXming/circle/model"
 	pipelineLib "github.com/SimonXming/pipeline/pipeline"
 	"github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/labstack/echo"
@@ -12,6 +13,18 @@ import (
 	"io"
 	"os"
 )
+
+var Config = struct {
+	Storage struct {
+		// Users  model.UserStore
+		// Repos  model.RepoStore
+		// Builds model.BuildStore
+		// Logs   model.LogStore
+		Config model.ConfigStore
+		// Registries model.RegistryStore
+		// Secrets model.SecretStore
+	}
+}{}
 
 type RPC struct {
 	// queue queue.Queue

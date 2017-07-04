@@ -1,5 +1,5 @@
 hash: e1454aa36ad1caf03735bbb4e551b784150becc7e81fdda532533d63b2bdb76b
-updated: 2017-07-04T15:29:25.672878818+08:00
+updated: 2017-07-04T18:27:25.940281538+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: a539ee1a749a2b895533f979515ac7e6e0f5b650
@@ -48,10 +48,18 @@ imports:
   - yaml
 - name: github.com/docker/libtrust
   version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
+- name: github.com/drone/drone
+  version: 8c91205042d366dc8c9496c1e36841f0d82414c1
+  subpackages:
+  - store/datastore/sql
+  - store/datastore/sql/postgres
+  - store/datastore/sql/sqlite
 - name: github.com/flynn/go-shlex
   version: 3f9db97f856818214da2e1057f8ad84803971cff
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+- name: github.com/go-sql-driver/mysql
+  version: bf7f34fef176d890dfcc6e94319ac747291bc09a
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/labstack/echo
@@ -80,6 +88,8 @@ imports:
   - specs-go/v1
 - name: github.com/pkg/errors
   version: c605e284fe17294bda444b34710735b29d1a9d90
+- name: github.com/russross/meddler
+  version: 9515f6b01c158e6a98939d1ddfddb8a05544e08d
 - name: github.com/SimonXming/pipeline
   version: 31b17f7216d634f3c2a21f38e7a332121752d1ef
   subpackages:
@@ -114,7 +124,7 @@ imports:
   - acme
   - acme/autocert
 - name: golang.org/x/net
-  version: 1f9224279e98554b6a6432d4dd998a739f8b2b7c
+  version: 570fa1c91359c1869590e9cedf3b53162a51a167
   subpackages:
   - context
   - context/ctxhttp

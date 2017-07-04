@@ -1,13 +1,17 @@
 package store
 
 import (
-	"io"
+	// "io"
 
 	"github.com/SimonXming/circle/model"
-
-	"golang.org/x/net/context"
+	// "golang.org/x/net/context"
 )
 
 type Store interface {
 	ConfigCreate(*model.Config) error
+	ConfigLoad(int64) (*model.Config, error)
+
+	RepoCreate(*model.Repo) error
+
+	BuildCreate(*model.Build) error
 }
