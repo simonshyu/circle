@@ -1,8 +1,57 @@
-hash: 466938cc059f8d072b79b14410f735d58c0fab11a570252fa07e5c3d533e0a33
-updated: 2017-06-28T23:55:34.485566088+08:00
+hash: e1454aa36ad1caf03735bbb4e551b784150becc7e81fdda532533d63b2bdb76b
+updated: 2017-07-04T15:29:25.672878818+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
-  version: 2268707a8f0843315e2004ee4f1d021dc08baedf
+  version: a539ee1a749a2b895533f979515ac7e6e0f5b650
+- name: github.com/docker/distribution
+  version: f86db6b22663a27ba4d278220b7e34be528b1e79
+  subpackages:
+  - digestset
+  - reference
+- name: github.com/docker/docker
+  version: a9358df62cde2deb8184c742e6fb8d16c98a04a9
+  subpackages:
+  - api
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/events
+  - api/types/filters
+  - api/types/image
+  - api/types/mount
+  - api/types/network
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/time
+  - api/types/versions
+  - api/types/volume
+  - client
+  - pkg/ioutils
+  - pkg/longpath
+  - pkg/mount
+  - pkg/stdcopy
+  - pkg/system
+  - pkg/tlsconfig
+  - reference
+- name: github.com/docker/go-connections
+  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
+  subpackages:
+  - nat
+  - sockets
+  - tlsconfig
+- name: github.com/docker/go-units
+  version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
+- name: github.com/docker/libcompose
+  version: 0ad950cbeb3d72107613dd220b5e9d7e001b890b
+  subpackages:
+  - yaml
+- name: github.com/docker/libtrust
+  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
+- name: github.com/flynn/go-shlex
+  version: 3f9db97f856818214da2e1057f8ad84803971cff
+- name: github.com/ghodss/yaml
+  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
 - name: github.com/gorilla/websocket
   version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/labstack/echo
@@ -20,12 +69,33 @@ imports:
   version: 941b50ebc6efddf4c41c8e4537a5f68a4e686b24
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
-- name: github.com/SimonXming/pipeline
-  version: 71cf8b1e11f3772aaae1eb918f2279eeda2e9bda
+- name: github.com/Microsoft/go-winio
+  version: f533f7a102197536779ea3a8cb881d639e21ec5a
+- name: github.com/opencontainers/go-digest
+  version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
+- name: github.com/opencontainers/image-spec
+  version: 634a86b04874f256845e768b29b252053272b229
   subpackages:
+  - specs-go
+  - specs-go/v1
+- name: github.com/pkg/errors
+  version: c605e284fe17294bda444b34710735b29d1a9d90
+- name: github.com/SimonXming/pipeline
+  version: 31b17f7216d634f3c2a21f38e7a332121752d1ef
+  subpackages:
+  - pipeline
   - pipeline/backend
+  - pipeline/backend/docker
+  - pipeline/frontend
+  - pipeline/frontend/yaml
+  - pipeline/frontend/yaml/compiler
+  - pipeline/frontend/yaml/types
   - pipeline/interrupt
+  - pipeline/multipart
   - pipeline/rpc
+  - pipeline/rpc2
+- name: github.com/Sirupsen/logrus
+  version: 7dd06bf38e1e13df288d471a57d5adbac106be9e
 - name: github.com/sourcegraph/jsonrpc2
   version: b02337b177765febba753be4b7d9c26e3a9fd220
   subpackages:
@@ -39,17 +109,25 @@ imports:
 - name: github.com/valyala/fasttemplate
   version: dcecefd839c4193db0d35b88ec65b4c12d360ab0
 - name: golang.org/x/crypto
-  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
+  version: 69be088f860613049aa58c65154d1b1d32bbdf90
   subpackages:
   - acme
   - acme/autocert
 - name: golang.org/x/net
-  version: 8663ed5da4fd087c3cfb99a996e628b72e2f0948
+  version: 1f9224279e98554b6a6432d4dd998a739f8b2b7c
   subpackages:
   - context
   - context/ctxhttp
+  - proxy
+- name: golang.org/x/sync
+  version: f52d1811a62927559de87708c8913c1650ce4f26
+  subpackages:
+  - errgroup
 - name: golang.org/x/sys
-  version: 90796e5a05ce440b41c768bd9af257005e470461
+  version: 94b76065f2d2081d0fef24a6e67c571f51a6408a
   subpackages:
   - unix
+  - windows
+- name: gopkg.in/yaml.v2
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []
