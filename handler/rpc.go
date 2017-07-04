@@ -34,7 +34,7 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 
 	pipeline := new(rpc2.Pipeline)
 
-	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/handler/task_data.json"
+	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/task_data.json"
 	var reader io.ReadCloser
 	reader, err := os.Open(path)
 	if err != nil {
