@@ -82,4 +82,18 @@ type Peer interface {
 5. Event 的概念是什么用途？
 	* Event 没有落库，看上去只是为了方便 log, 看来只是用在了 pubsub.Message 里。 
 	* model.EventPush/model.EventPull/model.EventTag 等等是针对 webhook 所携带的 git 操作类型, 对于 build.build_event 字段
+6. 拉取 git/svn 代码使用 golang 的哪个库？
+	* 使用 plugin/git:latest 这个镜像
 
+## 执行时的代码逻辑
+0. 入口 pipeline.New(backend.Config).Run()
+1. `pipeline.go` runtime.execAll(backend.Config.Stages.Steps)
+2. `pipeline.go` runtime.exec(Steps.step)
+3. `pipeline.go` runtime.engine.Exec(step) => dockerEngine.Exec(step)
+4. `docker/convert.go` toConfig() step.Config => docker.container.Config
+5. `docker/docker.go` ImagePull, ContainerCreate, ContainerStart
+
+## git pull 的逻辑
+1. step 定义了拉取代码所需的环境变量 WORKSPACE REMOTE_URL EMAIL PASSWORD 等
+2. 定义一个负责拉取代码的镜像, 镜像运行需要以上环境变量
+3. WORKSPACE 是一个可以与其他镜像共享的卷

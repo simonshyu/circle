@@ -36,7 +36,7 @@ func GetRoot(c echo.Context) error {
 
 func Broker(c echo.Context) error {
 	// receive agent connection
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	ws, err := upgrader.Upgrade(c.Response().Writer, c.Request(), nil)
 	if err != nil {
 		return err
 	}

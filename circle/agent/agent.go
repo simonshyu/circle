@@ -11,6 +11,21 @@ import (
 	"time"
 )
 
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/SimonXming/pipeline/pipeline"
+	"github.com/SimonXming/pipeline/pipeline/backend"
+	"github.com/SimonXming/pipeline/pipeline/backend/docker"
+	"github.com/SimonXming/pipeline/pipeline/frontend"
+	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
+	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
+	"github.com/SimonXming/pipeline/pipeline/multipart"
+	"io"
+	"os"
+)
+
 // Command exports the agent command.
 var Command = cli.Command{
 	Name:   "agent",
@@ -41,7 +56,7 @@ func loop(c *cli.Context) error {
 	})
 
 	var wg sync.WaitGroup
-	parallel := 5
+	parallel := 1
 	wg.Add(parallel)
 
 	for i := 0; i < parallel; i++ {
@@ -77,11 +92,140 @@ run 方法是 agent 的主要运行逻辑
 
 func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
-	time.Sleep(time.Second * 5)
-	work, err := client.Next(ctx, filter)
+	time.Sleep(time.Second * 1)
+
+	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
+
+	e := testRunPipeline(ctx, client, path)
+	if e != nil {
+		println(e)
+	}
+
+	// work, err := client.Next(ctx, filter)
+	// if err != nil {
+	// 	return err
+	// }
+	// println(work)
+	os.Exit(1)
+	return nil
+}
+
+func testRunPipeline(ctx context.Context, client rpc.Peer, filePath string) error {
+	conf, err := yaml.ParseFile(filePath)
 	if err != nil {
 		return err
 	}
-	println(work)
+	// fmt.Printf("%v", conf)
+	compiled := compiler.New(
+		compiler.WithPrefix(
+			"test",
+		),
+		compiler.WithLocal(
+			false,
+		),
+		compiler.WithMetadata(
+			metadataFromContext(),
+		),
+		compiler.WithNetrc(
+			"simon_xu@outlook.com",
+			"@git5508177QaZ",
+			"github.com",
+		),
+	).Compile(conf)
+
+	err = outputJson(compiled)
+	if err != nil {
+		return err
+	}
+
+	engine, err := docker.NewEnv()
+	if err != nil {
+		return err
+	}
+
+	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, err := rc.NextPart()
+		if err != nil {
+			return err
+		}
+		io.Copy(os.Stderr, part)
+		return nil
+	})
+
+	err = pipeline.New(compiled,
+		pipeline.WithContext(ctx),
+		pipeline.WithLogger(defaultLogger),
+		// pipeline.WithTracer(defaultTracer),
+		pipeline.WithEngine(engine),
+	).Run()
+
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
 	return nil
+}
+
+func outputJson(compiled *backend.Config) error {
+	if false {
+		for _, stage := range compiled.Stages {
+			for _, step := range stage.Steps {
+				fmt.Printf("%v", step)
+			}
+		}
+	}
+	// marshal the compiled spec to formatted yaml
+	out, err := json.MarshalIndent(compiled, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// create output file with option to dump to stdout
+	var writer = os.Stdout
+	output := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.json"
+	if output != "-" {
+		writer, err = os.Create(output)
+		if err != nil {
+			return err
+		}
+	}
+	defer writer.Close()
+
+	_, err = writer.Write(out)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func metadataFromContext() frontend.Metadata {
+	return frontend.Metadata{
+		Repo: frontend.Repo{
+			Name:    "go-practice",
+			Link:    "https://github.com/SimonXming/go-practice.git",
+			Remote:  "https://github.com/SimonXming/go-practice.git",
+			Private: false,
+		},
+		Curr: frontend.Build{
+			Number:   1,
+			Created:  0,
+			Started:  0,
+			Finished: 0,
+			Status:   "start",
+			Event:    "",
+			Link:     "",
+			Target:   "",
+			Commit: frontend.Commit{
+				Sha:     "50616752e10380848631c7c5bbabc87adb096d12",
+				Ref:     "refs/heads/master",
+				Refspec: "refs/heads/master",
+				Branch:  "master",
+				Message: "",
+				Author: frontend.Author{
+					Name:   "",
+					Email:  "",
+					Avatar: "",
+				},
+			},
+		},
+	}
 }
