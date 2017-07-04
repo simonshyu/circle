@@ -7,5 +7,5 @@ import (
 
 func Load(e *echo.Echo) {
 	e.GET("/", handler.GetRoot)
-	e.GET("/ws/broker", handler.Broker)
+	e.GET("/ws/broker", handler.RPCHandler)
 }

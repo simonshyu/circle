@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
+	"github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
@@ -35,12 +36,12 @@ var Command = cli.Command{
 
 func loop(c *cli.Context) error {
 	endpoint := "ws://localhost:8000/ws/broker"
-	filter := rpc.Filter{
+	filter := rpc2.Filter{
 		Labels: map[string]string{
 			"platform": "linux",
 		},
 	}
-	client, err := rpc.NewClient(
+	client, err := rpc2.NewClient(
 		endpoint,
 	)
 	if err != nil {
@@ -90,23 +91,43 @@ run 方法是 agent 的主要运行逻辑
 9. 通过 connection 同步 pipelone 状态
 */
 
-func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
+func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 	log.Println("pipeline: request next execution")
 	time.Sleep(time.Second * 1)
 
-	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
+	// path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
 
-	e := testRunPipeline(ctx, client, path)
-	if e != nil {
-		println(e)
+	// e := testRunPipeline(ctx, client, path)
+	// if e != nil {
+	// 	println(e)
+	// }
+
+	engine, err := docker.NewEnv()
+	if err != nil {
+		return err
 	}
 
-	// work, err := client.Next(ctx, filter)
-	// if err != nil {
-	// 	return err
-	// }
-	// println(work)
-	os.Exit(1)
+	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, err := rc.NextPart()
+		if err != nil {
+			return err
+		}
+		io.Copy(os.Stderr, part)
+		return nil
+	})
+
+	work, err := client.Next(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	err = pipeline.New(work.Config,
+		pipeline.WithContext(ctx),
+		pipeline.WithLogger(defaultLogger),
+		// pipeline.WithTracer(defaultTracer),
+		pipeline.WithEngine(engine),
+	).Run()
+
 	return nil
 }
 
