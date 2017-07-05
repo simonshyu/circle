@@ -4,7 +4,7 @@ import (
 	// gosql "database/sql"
 
 	"github.com/SimonXming/circle/model"
-	"github.com/drone/drone/store/datastore/sql"
+	"github.com/SimonXming/circle/store/datastore/sql"
 	"github.com/russross/meddler"
 )
 

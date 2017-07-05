@@ -1,7 +1,7 @@
 package sql
 
 import (
-	"github.com/drone/drone/store/datastore/sql/sqlite"
+	"github.com/SimonXming/circle/store/datastore/sql/sqlite"
 )
 
 // Supported database drivers
