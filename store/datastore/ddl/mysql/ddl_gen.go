@@ -24,6 +24,14 @@ var migrations = []struct {
 		name: "create-table-config",
 		stmt: createTableConfig,
 	},
+	{
+		name: "create-table-secrets",
+		stmt: createTableSecrets,
+	},
+	{
+		name: "create-index-secrets-repo",
+		stmt: createIndexSecretsRepo,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -106,9 +114,6 @@ SELECT name FROM migrations
 var createTableRepos = `
 CREATE TABLE IF NOT EXISTS repos (
  repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
-,repo_host          VARCHAR(250)
-,repo_login         VARCHAR(250)
-,repo_password      VARCHAR(250)
 ,repo_clone         VARCHAR(1000)
 ,repo_branch        VARCHAR(500)
 ,repo_scm           VARCHAR(50)
@@ -150,4 +155,23 @@ CREATE TABLE IF NOT EXISTS config (
 
 ,UNIQUE(config_hash, config_repo_id)
 );
+`
+
+//
+// 004_create_table_secrets.sql
+//
+
+var createTableSecrets = `
+CREATE TABLE IF NOT EXISTS secrets (
+ secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
+,secret_repo_id     INTEGER
+,secret_name        VARCHAR(250)
+,secret_value       MEDIUMBLOB
+
+,UNIQUE(secret_name, secret_repo_id)
+);
+`
+
+var createIndexSecretsRepo = `
+CREATE INDEX ix_secrets_repo  ON secrets  (secret_repo_id);
 `

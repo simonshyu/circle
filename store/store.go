@@ -13,5 +13,7 @@ type Store interface {
 
 	RepoCreate(*model.Repo) error
 
+	SecretCreate(*model.Secret) error
+
 	BuildCreate(*model.Build) error
 }
