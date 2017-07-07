@@ -97,3 +97,79 @@ type Peer interface {
 1. step 定义了拉取代码所需的环境变量 WORKSPACE REMOTE_URL EMAIL PASSWORD 等
 2. 定义一个负责拉取代码的镜像, 镜像运行需要以上环境变量
 3. WORKSPACE 是一个可以与其他镜像共享的卷
+
+## 表设计
+
+* 核心表是 config
+* config 应该关联了一个代码库 repo
+* repo 应该关联了一个 secret
+* 如果要实现和 gitlab 服务器的交互，需要一个 remote 和 remote.GitlabClient
+* remote.GitlabClient 需要 host 和 secret 来与 gitlab 交互
+
+场景一：
+一个 dcos 用户登录，提供了若干个 scm 服务地址和用户名密码，scm 是对不同类型代码管理工具的抽象。
+用户查看 scm 服务地址对应的代码库列表，选择其中的某个代码库，记录并转化为用于构建的 repo。
+转化为 repo 的过程中，生成一条用于鉴权的 secret（默认 secret 类型为用户名密码，也可以新增其他类型的 secret）。
+针对选中的每个 repo 建立一个构建相关的 config. (注意：config 包含了构建行为针对的branch，如果 hook 携带的 branch 的被 exclude，不会触发构建)
+
+hook 触发的构建携带了需要 pull 的代码分支(tag,commit)，而用户点击构建时，需要 pull 的是上次构建的代码或者 default_branch
+
+## circle 与 scm server 交互的接口
+
+```golang
+
+type Remote interface {
+	// Login authenticates the session and returns the
+	// remote user details.
+	Login(w http.ResponseWriter, r *http.Request) (*model.User, error)
+
+	// Auth authenticates the session and returns the remote user
+	// login for the given token and secret
+	Auth(token, secret string) (string, error)
+
+	// Teams fetches a list of team memberships from the remote system.
+	Teams(u *model.User) ([]*model.Team, error)
+
+	// TeamPerm fetches the named organization permissions from
+	// the remote system for the specified user.
+	TeamPerm(u *model.User, org string) (*model.Perm, error)
+
+	// Repo fetches the named repository from the remote system.
+	Repo(u *model.User, owner, repo string) (*model.Repo, error)
+
+	// Repos fetches a list of repos from the remote system.
+	Repos(u *model.User) ([]*model.RepoLite, error)
+
+	// Perm fetches the named repository permissions from
+	// the remote system for the specified user.
+	Perm(u *model.User, owner, repo string) (*model.Perm, error)
+
+	// File fetches a file from the remote repository and returns in string
+	// format.
+	File(u *model.User, r *model.Repo, b *model.Build, f string) ([]byte, error)
+
+	// FileRef fetches a file from the remote repository for the given ref
+	// and returns in string format.
+	FileRef(u *model.User, r *model.Repo, ref, f string) ([]byte, error)
+
+	// Status sends the commit status to the remote system.
+	// An example would be the GitHub pull request status.
+	Status(u *model.User, r *model.Repo, b *model.Build, link string) error
+
+	// Netrc returns a .netrc file that can be used to clone
+	// private repositories from a remote system.
+	Netrc(u *model.User, r *model.Repo) (*model.Netrc, error)
+
+	// Activate activates a repository by creating the post-commit hook.
+	Activate(u *model.User, r *model.Repo, link string) error
+
+	// Deactivate deactivates a repository by removing all previously created
+	// post-commit hooks matching the given link.
+	Deactivate(u *model.User, r *model.Repo, link string) error
+
+	// Hook parses the post-commit hook from the Request body and returns the
+	// required data in a standard format.
+	Hook(r *http.Request) (*model.Repo, *model.Build, error)
+}
+
+```

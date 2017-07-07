@@ -4,7 +4,7 @@ import (
 	// "io"
 
 	"github.com/SimonXming/circle/model"
-	// "golang.org/x/net/context"
+	"github.com/labstack/echo"
 )
 
 type Store interface {
@@ -16,4 +16,12 @@ type Store interface {
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build) error
+}
+
+func RepoCreate(c echo.Context, repo *model.Repo) error {
+	return FromContext(c).RepoCreate(repo)
+}
+
+func SecretCreate(c echo.Context, secret *model.Secret) error {
+	return FromContext(c).SecretCreate(secret)
 }

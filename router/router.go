@@ -7,5 +7,6 @@ import (
 
 func Load(e *echo.Echo) {
 	e.GET("/", handler.GetRoot)
+	e.POST("/repo", handler.PostRepo)
 	e.GET("/ws/broker", handler.RPCHandler)
 }

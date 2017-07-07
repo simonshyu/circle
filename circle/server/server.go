@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	ciserver "github.com/SimonXming/circle/handler"
 	"github.com/SimonXming/circle/router"
+	cimiddleware "github.com/SimonXming/circle/router/middleware"
 	"github.com/SimonXming/circle/store"
 	"github.com/labstack/echo/middleware"
 	"github.com/urfave/cli"
@@ -22,7 +23,7 @@ var Command = cli.Command{
 		cli.StringFlag{
 			Name:  "datasource",
 			Usage: "database driver configuration string",
-			Value: "test:test@tcp(192.168.13.21:3306)/test",
+			Value: "test:test@tcp(127.0.0.1:3306)/test",
 		},
 	},
 }
@@ -34,6 +35,7 @@ func server(c *cli.Context) error {
 	e := ciserver.NewEchoServer()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(cimiddleware.StoreWithConfig(s))
 	router.Load(e)
 	e.Logger.Fatal(e.Start("0.0.0.0:8000"))
 	return nil
