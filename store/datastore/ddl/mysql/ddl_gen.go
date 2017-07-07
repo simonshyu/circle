@@ -32,6 +32,10 @@ var migrations = []struct {
 		name: "create-index-secrets-repo",
 		stmt: createIndexSecretsRepo,
 	},
+	{
+		name: "create-table-scm-account",
+		stmt: createTableScmAccount,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -114,9 +118,12 @@ SELECT name FROM migrations
 var createTableRepos = `
 CREATE TABLE IF NOT EXISTS repos (
  repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
+,repo_scm_id        INTEGER
 ,repo_clone         VARCHAR(1000)
 ,repo_branch        VARCHAR(500)
-,repo_scm           VARCHAR(50)
+,repo_owner         VARCHAR(250)
+,repo_name          VARCHAR(250)
+,repo_allow_push    TINYINT(1)
 );
 `
 
@@ -166,12 +173,27 @@ CREATE TABLE IF NOT EXISTS secrets (
  secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_repo_id     INTEGER
 ,secret_name        VARCHAR(250)
+,secret_is_default  TINYINT(1)
 ,secret_value       MEDIUMBLOB
 
-,UNIQUE(secret_name, secret_repo_id)
+,UNIQUE(secret_is_default, secret_repo_id)
 );
 `
 
 var createIndexSecretsRepo = `
 CREATE INDEX ix_secrets_repo  ON secrets  (secret_repo_id);
+`
+
+//
+// 05_create_table_scm_account.sql
+//
+
+var createTableScmAccount = `
+CREATE TABLE IF NOT EXISTS scm_account (
+ scm_id            INTEGER PRIMARY KEY AUTO_INCREMENT
+,scm_host          VARCHAR(500)
+,scm_login         VARCHAR(250)
+,scm_password      VARCHAR(250)
+,scm_type          VARCHAR(50)
+);
 `

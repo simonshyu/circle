@@ -4,9 +4,10 @@ CREATE TABLE IF NOT EXISTS secrets (
  secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_repo_id     INTEGER
 ,secret_name        VARCHAR(250)
+,secret_is_default  TINYINT(1)
 ,secret_value       MEDIUMBLOB
 
-,UNIQUE(secret_name, secret_repo_id)
+,UNIQUE(secret_is_default, secret_repo_id)
 );
 
 -- name: create-index-secrets-repo
