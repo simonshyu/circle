@@ -6,49 +6,68 @@
 -- SET FOREIGN_KEY_CHECKS=0;
 
 -- ---
--- Table 'Config'
+-- Table 'config'
 -- 流程定义表
 -- ---
 
-DROP TABLE IF EXISTS `Config`;
+DROP TABLE IF EXISTS `config`;
 		
-CREATE TABLE `Config` (
+CREATE TABLE `config` (
+  `config_repo_id` VARCHAR NULL DEFAULT NULL,
+  `config_data` BLOB NULL DEFAULT NULL COMMENT 'yaml 格式 pipeline 定义的文件',
+  `config_hash` VARCHAR(250) NULL DEFAULT NULL COMMENT 'yaml 文件的 hash 值',
   `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) COMMENT '流程定义表';
 
 -- ---
--- Table 'Repo'
+-- Table 'repos'
 -- 代码仓库相关信息表
 -- ---
 
-DROP TABLE IF EXISTS `Repo`;
+DROP TABLE IF EXISTS `repos`;
 		
-CREATE TABLE `Repo` (
+CREATE TABLE `repos` (
+  `repo_scm_id` VARCHAR(100) NULL DEFAULT NULL COMMENT '代码仓库类型',
+  `repo_clone` VARCHAR NULL DEFAULT NULL COMMENT '代码仓库下载地址',
+  `repo_branch` VARCHAR NULL DEFAULT NULL,
+  `repo_owner` VARCHAR NULL DEFAULT NULL,
+  `repo_name` VARCHAR NULL DEFAULT NULL,
+  `repo_allow_push` VARCHAR NULL DEFAULT NULL COMMENT '是否允许 push 触发构建',
   `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) COMMENT '代码仓库相关信息表';
 
 -- ---
--- Table 'Sercet'
--- 保存代码仓库，镜像仓库等的口令信息。
+-- Table 'sercets'
+-- 默认拷贝于 scm_account 保存代码仓库，镜像仓库等的口令信息。
 -- ---
 
-DROP TABLE IF EXISTS `Sercet`;
+DROP TABLE IF EXISTS `sercets`;
 		
-CREATE TABLE `Sercet` (
+CREATE TABLE `sercets` (
+  `secret_repo_id` INTEGER NULL DEFAULT NULL,
+  `secret_name` VARCHAR NULL DEFAULT NULL,
+  `secret_value` BLOB NULL DEFAULT NULL,
+  `is_default` TINYINT NULL DEFAULT 对于 repo 是否是默认 secret,
   `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
   PRIMARY KEY (`id`)
-) COMMENT '保存代码仓库，镜像仓库等的口令信息。';
+) COMMENT '默认拷贝于 scm_account 保存代码仓库，镜像仓库等的口令信息。';
 
 -- ---
--- Table 'Build'
+-- Table 'builds'
 -- 代表一次构建相关信息。
 -- ---
 
-DROP TABLE IF EXISTS `Build`;
+DROP TABLE IF EXISTS `builds`;
 		
-CREATE TABLE `Build` (
+CREATE TABLE `builds` (
+  `build_repo_id` VARCHAR NULL DEFAULT NULL,
+  `build_config_id` VARCHAR NULL DEFAULT NULL,
+  `build_created` DATETIME NULL DEFAULT NULL,
+  `build_started` DATETIME NULL DEFAULT NULL,
+  `build_finished` DATETIME NULL DEFAULT NULL,
+  `build_number` INTEGER NULL DEFAULT NULL,
   `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) COMMENT '代表一次构建相关信息。';
@@ -90,37 +109,61 @@ CREATE TABLE `Logs` (
 ) COMMENT '代表一次构建的 Logs';
 
 -- ---
+-- Table 'scm_account'
+-- 
+-- ---
+
+DROP TABLE IF EXISTS `scm_account`;
+		
+CREATE TABLE `scm_account` (
+  `scm_login` VARCHAR NULL DEFAULT NULL,
+  `scm_host` VARCHAR NULL DEFAULT NULL,
+  `scm_type` VARCHAR NULL DEFAULT NULL,
+  `scm_password` VARCHAR NULL DEFAULT NULL,
+  `id` INTEGER NULL AUTO_INCREMENT DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+-- ---
 -- Foreign Keys 
 -- ---
 
+ALTER TABLE `config` ADD FOREIGN KEY (config_repo_id) REFERENCES `repos` (`id`);
+ALTER TABLE `repos` ADD FOREIGN KEY (repo_scm_id) REFERENCES `scm_account` (`id`);
+ALTER TABLE `sercets` ADD FOREIGN KEY (secret_repo_id) REFERENCES `repos` (`id`);
+ALTER TABLE `builds` ADD FOREIGN KEY (build_repo_id) REFERENCES `repos` (`id`);
+ALTER TABLE `builds` ADD FOREIGN KEY (build_config_id) REFERENCES `config` (`id`);
 
 -- ---
 -- Table Properties
 -- ---
 
--- ALTER TABLE `Config` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE `Repo` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE `Sercet` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
--- ALTER TABLE `Build` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- ALTER TABLE `config` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- ALTER TABLE `repos` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- ALTER TABLE `sercets` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- ALTER TABLE `builds` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 -- ALTER TABLE `Task` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 -- ALTER TABLE `File` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 -- ALTER TABLE `Logs` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+-- ALTER TABLE `scm_account` ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- ---
 -- Test Data
 -- ---
 
--- INSERT INTO `Config` (`id`) VALUES
--- ('');
--- INSERT INTO `Repo` (`id`) VALUES
--- ('');
--- INSERT INTO `Sercet` (`id`) VALUES
--- ('');
--- INSERT INTO `Build` (`id`) VALUES
--- ('');
+-- INSERT INTO `config` (`config_repo_id`,`config_data`,`config_hash`,`id`) VALUES
+-- ('','','','');
+-- INSERT INTO `repos` (`repo_scm_id`,`repo_clone`,`repo_branch`,`repo_owner`,`repo_name`,`repo_allow_push`,`id`) VALUES
+-- ('','','','','','','');
+-- INSERT INTO `sercets` (`secret_repo_id`,`secret_name`,`secret_value`,`is_default`,`id`) VALUES
+-- ('','','','','');
+-- INSERT INTO `builds` (`build_repo_id`,`build_config_id`,`build_created`,`build_started`,`build_finished`,`build_number`,`id`) VALUES
+-- ('','','','','','','');
 -- INSERT INTO `Task` (`id`) VALUES
 -- ('');
 -- INSERT INTO `File` (`id`) VALUES
 -- ('');
 -- INSERT INTO `Logs` (`id`) VALUES
 -- ('');
+-- INSERT INTO `scm_account` (`scm_login`,`scm_host`,`scm_type`,`scm_password`,`id`) VALUES
+-- ('','','','','');
