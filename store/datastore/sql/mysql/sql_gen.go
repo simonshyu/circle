@@ -6,8 +6,9 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"config-find-id":   configFindId,
-	"scm-account-list": scmAccountList,
+	"config-find-id":      configFindId,
+	"scm-account-list":    scmAccountList,
+	"scm-account-find-id": scmAccountFindId,
 }
 
 var configFindId = `
@@ -28,4 +29,15 @@ SELECT
 ,scm_password
 ,scm_type
 FROM scm_account
+`
+
+var scmAccountFindId = `
+SELECT
+ scm_id
+,scm_host
+,scm_login
+,scm_password
+,scm_type
+FROM scm_account
+WHERE scm_id = ?
 `

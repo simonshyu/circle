@@ -17,4 +17,11 @@ func (db *datastore) ScmAccountList() ([]*model.ScmAcount, error) {
 	return data, err
 }
 
+func (db *datastore) ScmAccountLoad(id int64) (*model.ScmAcount, error) {
+	stmt := sql.Lookup(db.driver, "scm-account-find-id")
+	account := new(model.ScmAcount)
+	err := meddler.QueryRow(db, account, stmt, id)
+	return account, err
+}
+
 const scmAccountTable = "scm_account"

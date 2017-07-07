@@ -6,6 +6,7 @@ import (
 	"github.com/SimonXming/circle/store"
 	"github.com/labstack/echo"
 	"net/http"
+	"strconv"
 )
 
 func NewEchoServer() *echo.Echo {
@@ -15,28 +16,6 @@ func NewEchoServer() *echo.Echo {
 func GetRoot(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
-
-// func PostRepo(c echo.Context) error {
-// 	in := new(model.Repo)
-// 	if err := c.Bind(in); err != nil {
-// 		c.String(http.StatusBadRequest, err.Error())
-// 		return err
-// 	}
-
-// 	repo := &model.Repo{
-// 		Clone:  in.Clone,
-// 		Kind:   in.Kind,
-// 		Branch: in.Branch,
-// 	}
-
-// 	err := store.RepoCreate(c, repo)
-// 	if err != nil {
-// 		c.String(http.StatusBadRequest, err.Error())
-// 		return err
-// 	}
-// 	return nil
-
-// }
 
 func PostScmAccount(c echo.Context) error {
 	in := new(model.ScmAcount)
@@ -68,6 +47,21 @@ func GetScmAccounts(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, accounts)
+
+}
+
+func GetScmAccount(c echo.Context) error {
+	scmId, err := strconv.ParseInt(c.Param("scmID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	account, err := store.ScmAccountLoad(c, scmId)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	return c.JSON(http.StatusOK, account)
 
 }
 
