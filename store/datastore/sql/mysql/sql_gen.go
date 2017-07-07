@@ -1,4 +1,4 @@
-package sqlite
+package mysql
 
 // Lookup returns the named statement.
 func Lookup(name string) string {
@@ -6,7 +6,8 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"config-find-id": configFindId,
+	"config-find-id":   configFindId,
+	"scm-account-list": scmAccountList,
 }
 
 var configFindId = `
@@ -17,4 +18,14 @@ SELECT
 ,config_data
 FROM config
 WHERE config_id = ?
+`
+
+var scmAccountList = `
+SELECT
+ scm_id
+,scm_host
+,scm_login
+,scm_password
+,scm_type
+FROM scm_account
 `

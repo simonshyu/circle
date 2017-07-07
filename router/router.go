@@ -8,6 +8,7 @@ import (
 func Load(e *echo.Echo) {
 	e.GET("/", handler.GetRoot)
 	// e.POST("/repo", handler.PostRepo)
-	e.POST("/scm_account", handler.PostScmAccount)
+	e.POST("/scm", handler.PostScmAccount)
+	e.GET("/scm", handler.GetScmAccounts)
 	e.GET("/ws/broker", handler.RPCHandler)
 }

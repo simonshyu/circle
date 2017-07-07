@@ -61,6 +61,16 @@ func PostScmAccount(c echo.Context) error {
 
 }
 
+func GetScmAccounts(c echo.Context) error {
+	accounts, err := store.ScmAccountList(c)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	return c.JSON(http.StatusOK, accounts)
+
+}
+
 func PostSecret(c echo.Context) error {
 	in := new(model.Secret)
 	if err := c.Bind(in); err != nil {

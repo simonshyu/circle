@@ -1,13 +1,12 @@
 package sql
 
 import (
-	"github.com/SimonXming/circle/store/datastore/sql/sqlite"
+	"github.com/SimonXming/circle/store/datastore/sql/mysql"
 )
 
 // Supported database drivers
 const (
-	DriverSqlite = "sqlite3"
-	DriverMysql  = "mysql"
+	DriverMysql = "mysql"
 )
 
 // Lookup returns the named sql statement compatible with
@@ -15,8 +14,8 @@ const (
 func Lookup(driver string, name string) string {
 	switch driver {
 	case DriverMysql:
-		return sqlite.Lookup(name)
+		return mysql.Lookup(name)
 	default:
-		return sqlite.Lookup(name)
+		return mysql.Lookup(name)
 	}
 }
