@@ -8,6 +8,8 @@ import (
 )
 
 type Store interface {
+	ScmAccountCreate(*model.ScmAcount) error
+
 	ConfigCreate(*model.Config) error
 	ConfigLoad(int64) (*model.Config, error)
 
@@ -16,6 +18,10 @@ type Store interface {
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build) error
+}
+
+func ScmAccountCreate(c echo.Context, account *model.ScmAcount) error {
+	return FromContext(c).ScmAccountCreate(account)
 }
 
 func RepoCreate(c echo.Context, repo *model.Repo) error {

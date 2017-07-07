@@ -16,20 +16,43 @@ func GetRoot(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
 
-func PostRepo(c echo.Context) error {
-	in := new(model.Repo)
+// func PostRepo(c echo.Context) error {
+// 	in := new(model.Repo)
+// 	if err := c.Bind(in); err != nil {
+// 		c.String(http.StatusBadRequest, err.Error())
+// 		return err
+// 	}
+
+// 	repo := &model.Repo{
+// 		Clone:  in.Clone,
+// 		Kind:   in.Kind,
+// 		Branch: in.Branch,
+// 	}
+
+// 	err := store.RepoCreate(c, repo)
+// 	if err != nil {
+// 		c.String(http.StatusBadRequest, err.Error())
+// 		return err
+// 	}
+// 	return nil
+
+// }
+
+func PostScmAccount(c echo.Context) error {
+	in := new(model.ScmAcount)
 	if err := c.Bind(in); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
-	repo := &model.Repo{
-		Clone:  in.Clone,
-		Kind:   in.Kind,
-		Branch: in.Branch,
+	account := &model.ScmAcount{
+		Host:     in.Host,
+		Login:    in.Login,
+		Password: in.Password,
+		Type:     in.Type,
 	}
 
-	err := store.RepoCreate(c, repo)
+	err := store.ScmAccountCreate(c, account)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
