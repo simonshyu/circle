@@ -8,9 +8,9 @@ import (
 )
 
 type Store interface {
-	ScmAccountCreate(*model.ScmAcount) error
-	ScmAccountList() ([]*model.ScmAcount, error)
-	ScmAccountLoad(int64) (*model.ScmAcount, error)
+	ScmAccountCreate(*model.ScmAccount) error
+	ScmAccountList() ([]*model.ScmAccount, error)
+	ScmAccountLoad(int64) (*model.ScmAccount, error)
 
 	ConfigCreate(*model.Config) error
 	ConfigLoad(int64) (*model.Config, error)
@@ -22,15 +22,15 @@ type Store interface {
 	BuildCreate(*model.Build) error
 }
 
-func ScmAccountCreate(c echo.Context, account *model.ScmAcount) error {
+func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {
 	return FromContext(c).ScmAccountCreate(account)
 }
 
-func ScmAccountList(c echo.Context) ([]*model.ScmAcount, error) {
+func ScmAccountList(c echo.Context) ([]*model.ScmAccount, error) {
 	return FromContext(c).ScmAccountList()
 }
 
-func ScmAccountLoad(c echo.Context, id int64) (*model.ScmAcount, error) {
+func ScmAccountLoad(c echo.Context, id int64) (*model.ScmAccount, error) {
 	return FromContext(c).ScmAccountLoad(id)
 }
 

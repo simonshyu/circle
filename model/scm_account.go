@@ -1,7 +1,7 @@
 package model
 
 // swagger:model build
-type ScmAcount struct {
+type ScmAccount struct {
 	ID       int64  `json:"id,omitempty"            meddler:"scm_id,pk"`
 	Host     string `json:"host,omitempty"          meddler:"scm_host"`
 	Login    string `json:"login,omitempty"         meddler:"scm_login"`

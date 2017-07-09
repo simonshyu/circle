@@ -3,7 +3,9 @@ package handler
 import (
 	// "fmt"
 	"github.com/SimonXming/circle/model"
+	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
+	"github.com/SimonXming/circle/utils"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -18,13 +20,13 @@ func GetRoot(c echo.Context) error {
 }
 
 func PostScmAccount(c echo.Context) error {
-	in := new(model.ScmAcount)
+	in := new(model.ScmAccount)
 	if err := c.Bind(in); err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
-	account := &model.ScmAcount{
+	account := &model.ScmAccount{
 		Host:     in.Host,
 		Login:    in.Login,
 		Password: in.Password,
@@ -63,6 +65,31 @@ func GetScmAccount(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, account)
 
+}
+
+func GetRemoteRepos(c echo.Context) error {
+	scmId, err := strconv.ParseInt(c.Param("scmID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	account, err := store.ScmAccountLoad(c, scmId)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	err = utils.SetupRemote(c, account)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	remote := remote.FromContext(c)
+	repos, err := remote.Repos()
+	if err != nil {
+		return err
+	}
+	println(repos)
+	return c.JSON(http.StatusOK, account)
 }
 
 func PostSecret(c echo.Context) error {
