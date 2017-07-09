@@ -27,10 +27,11 @@ func PostScmAccount(c echo.Context) error {
 	}
 
 	account := &model.ScmAccount{
-		Host:     in.Host,
-		Login:    in.Login,
-		Password: in.Password,
-		Type:     in.Type,
+		Host:         in.Host,
+		Login:        in.Login,
+		Password:     in.Password,
+		Type:         in.Type,
+		PrivateToken: in.PrivateToken,
 	}
 
 	err := store.ScmAccountCreate(c, account)
@@ -83,13 +84,13 @@ func GetRemoteRepos(c echo.Context) error {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
+
 	remote := remote.FromContext(c)
 	repos, err := remote.Repos()
 	if err != nil {
 		return err
 	}
-	println(repos)
-	return c.JSON(http.StatusOK, account)
+	return c.JSON(http.StatusOK, repos)
 }
 
 func PostSecret(c echo.Context) error {

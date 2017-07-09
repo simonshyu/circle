@@ -1,19 +1,22 @@
 package gitlab
 
 import (
+	"fmt"
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Opts defines configuration options.
 type Opts struct {
-	URL        string // Gogs server url.
-	Username   string // Optional machine account username.
-	Password   string // Optional machine account password.
-	SkipVerify bool   // Skip ssl verification.
+	URL          string // Gogs server url.
+	PrivateToken string // Gitlab PrivateToken
+	Username     string // Optional machine account username.
+	Password     string // Optional machine account password.
+	SkipVerify   bool   // Skip ssl verification.
 }
 
 // New returns a Remote implementation that integrates with Gitlab, an open
@@ -27,12 +30,14 @@ func New(opts Opts) (remote.Remote, error) {
 	if err == nil {
 		url.Host = host
 	}
+	fmt.Printf("%v", opts)
 	return &Gitlab{
-		URL:        opts.URL,
-		Machine:    url.Host,
-		Username:   opts.Username,
-		Password:   opts.Password,
-		SkipVerify: opts.SkipVerify,
+		URL:          opts.URL,
+		Machine:      url.Host,
+		Username:     opts.Username,
+		Password:     opts.Password,
+		PrivateToken: opts.PrivateToken,
+		SkipVerify:   opts.SkipVerify,
 	}, nil
 }
 
@@ -41,6 +46,7 @@ type Gitlab struct {
 	Machine      string
 	Username     string
 	Password     string
+	PrivateToken string
 	SkipVerify   bool
 	HideArchives bool
 	Search       bool
@@ -51,7 +57,31 @@ func (g *Gitlab) Repo(owner, repo string) (*model.Repo, error) {
 }
 
 func (g *Gitlab) Repos() ([]*model.Repo, error) {
-	return nil, nil
+	client := NewClient(g.URL, g.PrivateToken, g.SkipVerify)
+
+	var repos = []*model.Repo{}
+
+	all, err := client.AllProjects(g.HideArchives)
+	if err != nil {
+		return repos, err
+	}
+
+	for _, repo := range all {
+		var parts = strings.Split(repo.PathWithNamespace, "/")
+		var owner = parts[0]
+		var name = parts[1]
+		var clone_url = repo.HttpRepoUrl
+		var branch = repo.DefaultBranch
+
+		repos = append(repos, &model.Repo{
+			Owner:  owner,
+			Name:   name,
+			Clone:  clone_url,
+			Branch: branch,
+		})
+	}
+
+	return repos, err
 }
 
 func (g *Gitlab) Netrc(r *model.Repo) (*model.Netrc, error) {

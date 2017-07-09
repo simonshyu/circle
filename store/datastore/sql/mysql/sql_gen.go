@@ -27,6 +27,7 @@ SELECT
 ,scm_host
 ,scm_login
 ,scm_password
+,scm_private_token
 ,scm_type
 FROM scm_account
 `
@@ -37,6 +38,7 @@ SELECT
 ,scm_host
 ,scm_login
 ,scm_password
+,scm_private_token
 ,scm_type
 FROM scm_account
 WHERE scm_id = ?
