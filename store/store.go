@@ -50,6 +50,10 @@ func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*mo
 	return FromContext(c).GetRepoScmName(scmID, owner+"/"+name)
 }
 
+func ConfigCreate(c echo.Context, conf *model.Config) error {
+	return FromContext(c).ConfigCreate(conf)
+}
+
 func SecretCreate(c echo.Context, secret *model.Secret) error {
 	return FromContext(c).SecretCreate(secret)
 }

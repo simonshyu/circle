@@ -162,6 +162,17 @@ func PostRepo(c echo.Context) error {
 	return nil
 }
 
+func PostConfig(c echo.Context) error {
+	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	println(repoID)
+
+	return nil
+}
+
 func PostSecret(c echo.Context) error {
 	in := new(model.Secret)
 	if err := c.Bind(in); err != nil {

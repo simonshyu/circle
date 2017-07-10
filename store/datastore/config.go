@@ -9,7 +9,7 @@ import (
 )
 
 func (db *datastore) ConfigCreate(config *model.Config) error {
-	return meddler.Insert(db, "config", config)
+	return meddler.Insert(db, configTable, config)
 }
 
 func (db *datastore) ConfigLoad(id int64) (*model.Config, error) {
@@ -18,3 +18,5 @@ func (db *datastore) ConfigLoad(id int64) (*model.Config, error) {
 	err := meddler.QueryRow(db, conf, stmt, id)
 	return conf, err
 }
+
+const configTable = "config"

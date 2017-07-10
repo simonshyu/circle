@@ -101,7 +101,7 @@ type Peer interface {
 ## 表设计
 
 * 核心表是 config
-* config 应该关联了一个代码库 repo
+* config 应该关联了一个代码库 repo(可以多个 config 应该关联了同一个代码库)
 * repo 应该关联了一个 secret
 * 如果要实现和 gitlab 服务器的交互，需要一个 remote 和 remote.GitlabClient
 * remote.GitlabClient 需要 host 和 secret 来与 gitlab 交互
@@ -173,3 +173,27 @@ type Remote interface {
 }
 
 ```
+
+## 与 webhook 相关的问题
+
+### 现状
+
+* drone: webhook 事件关联哪个 commit 就去哪个 commit 取 .drone.yml 文件内容。所以，drone 可以支持任意版本。
+
+* circle: 因为 pipeline.yml 文件不存放在代码仓库。所以，只能维持单个(或若干个)版本的 pipeline.yml，每个版本分别对应一些分支限制条件，只有 webhook 发生时的信息满足限制条件，才会触发这个 webhook 对应 commit id 的构建。pipeline.yml 里定义了关心的分支信息。
+
+限制条件到这里只有：分支(pull, merge_request 等和 branch 相关的事件)
+
+
+当任意分支发生某一类型事件时，与此事件绑定的 `hook_url` 将会被调用(携带代码库信息，分支信息和事件信息)。假设有如下 `hook_url`
+```json
+[
+	"http://127.0.0.1:8000/scm-1/repo-1/hook",         # push，merge request
+	"http://127.0.0.1:8000/scm-2/repo-1/hook",         # tag
+]
+```
+1. 假设 master 分支发生 push 事件，`http://127.0.0.1:8000/scm-1/repo-1/hook` 触发。
+服务器根据 scmID 和 repo 信息找到 repoID。因为 repo.allow_push，所以找到 repo 唯一对应的 config-1。假设 config 里定义了只有涉及到 develop 的变动才会构建。所以这次构建 skip。
+
+2. 假设 master 分支发生 tag_push 事件，`http://127.0.0.1:8000/scm-2/repo-1/hook` 触发。
+服务器根据 scmID 和 repo 信息找到 repoID。因为 repo.allow_tag。所以 `repo.config_list` 中每一个 config 都构建。
