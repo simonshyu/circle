@@ -52,8 +52,37 @@ type Gitlab struct {
 	Search       bool
 }
 
-func (g *Gitlab) Repo(owner, repo string) (*model.Repo, error) {
-	return nil, nil
+// Repo fetches the named repository from the remote system.
+func (g *Gitlab) Repo(owner, name string) (*model.Repo, error) {
+	client := NewClient(g.URL, g.PrivateToken, g.SkipVerify)
+	id, err := GetProjectId(g, client, owner, name)
+	if err != nil {
+		return nil, err
+	}
+	repo_, err := client.Project(id)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := &model.Repo{}
+	repo.Owner = owner
+	repo.Name = name
+	repo.FullName = repo_.PathWithNamespace
+	// repo.Link = repo_.Url
+	repo.Clone = repo_.HttpRepoUrl
+	repo.Branch = "master"
+
+	if repo_.DefaultBranch != "" {
+		repo.Branch = repo_.DefaultBranch
+	}
+
+	// if g.PrivateMode {
+	// 	repo.IsPrivate = true
+	// } else {
+	// 	repo.IsPrivate = !repo_.Public
+	// }
+
+	return repo, err
 }
 
 func (g *Gitlab) Repos() ([]*model.Repo, error) {

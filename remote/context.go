@@ -21,8 +21,3 @@ func FromContext(c echo.Context) Remote {
 func ToContext(c Setter, r Remote) {
 	c.Set(key, r)
 }
-
-/*
-account 需要调用 convertToRemote 方法
-convertToRemote 需要调用 gitlab.New 方法
-*/

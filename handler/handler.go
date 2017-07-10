@@ -94,14 +94,11 @@ func GetRemoteRepos(c echo.Context) error {
 }
 
 func PostRepo(c echo.Context) error {
+	owner := c.Param("owner")
+	name := c.Param("name")
 	scmId, err := strconv.ParseInt(c.Param("scmID"), 10, 64)
 	if err != nil {
 		c.Error(err)
-		return err
-	}
-	in := new(model.Repo)
-	if err := c.Bind(in); err != nil {
-		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
@@ -112,13 +109,20 @@ func PostRepo(c echo.Context) error {
 	}
 	err = utils.SetupRemote(c, account)
 
-	r := &model.Repo{
-		ScmId:  scmId,
-		Owner:  in.Owner,
-		Name:   in.Name,
-		Clone:  in.Clone,
-		Branch: in.Branch,
+	r, err := remote.Repo(c, owner, name)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
 	}
+
+	// error if the repository already exists
+	_, err = store.GetRepoOwnerName(c, owner, name)
+	if err == nil {
+		c.String(http.StatusConflict, "Repository already exists.")
+		return err
+	}
+	r.ScmId = scmId
+	r.AllowPush = true
 
 	link := "http://localhost:8080/some/hook/url?access_token=123"
 

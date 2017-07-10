@@ -33,6 +33,11 @@ type Remote interface {
 }
 
 // Repo fetches the named repository from the remote system.
+func Repo(c echo.Context, owner, repo string) (*model.Repo, error) {
+	return FromContext(c).Repo(owner, repo)
+}
+
+// Repo fetches the named repository from the remote system.
 func Repos(c echo.Context) ([]*model.Repo, error) {
 	return FromContext(c).Repos()
 }
