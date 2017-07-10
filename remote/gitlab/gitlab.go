@@ -89,6 +89,26 @@ func (g *Gitlab) Netrc(r *model.Repo) (*model.Netrc, error) {
 }
 
 func (g *Gitlab) Activate(r *model.Repo, link string) error {
+	client := NewClient(g.URL, g.PrivateToken, g.SkipVerify)
+	id, err := GetProjectId(g, client, r.Owner, r.Name)
+	if err != nil {
+		return err
+	}
+	uri, err := url.Parse(link)
+	if err != nil {
+		return err
+	}
+
+	// circleUrl := "http://localhost:8000/hook?access_token=1234"
+	circleUrl := fmt.Sprintf("%s://%s", uri.Scheme, uri.Host)
+	circleToken := uri.Query().Get("access_token")
+	ssl_verify := g.SkipVerify
+	all_push := r.AllowPush
+
+	err = client.AddProjectHook(id, circleUrl, circleToken, all_push, ssl_verify)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

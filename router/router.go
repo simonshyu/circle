@@ -12,5 +12,6 @@ func Load(e *echo.Echo) {
 	e.GET("/scm", handler.GetScmAccounts)
 	e.GET("/scm/:scmID", handler.GetScmAccount)
 	e.GET("/scm/:scmID/repos/remote", handler.GetRemoteRepos)
+	e.POST("/scm/:scmID/repos", handler.PostRepo)
 	e.GET("/ws/broker", handler.RPCHandler)
 }

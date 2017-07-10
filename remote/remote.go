@@ -36,3 +36,8 @@ type Remote interface {
 func Repos(c echo.Context) ([]*model.Repo, error) {
 	return FromContext(c).Repos()
 }
+
+// Repo fetches the named repository from the remote system.
+func Activate(c echo.Context, r *model.Repo, link string) error {
+	return FromContext(c).Activate(r, link)
+}

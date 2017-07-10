@@ -29,7 +29,6 @@ func FromScmAccount(account *model.ScmAccount) (remote.Remote, error) {
 
 // helper function to setup the Gitlab remote from the CLI arguments.
 func setupGitlab(account *model.ScmAccount) (remote.Remote, error) {
-	println("account", account.PrivateToken)
 	return gitlab.New(gitlab.Opts{
 		URL:          account.Host,
 		Username:     account.Login,
