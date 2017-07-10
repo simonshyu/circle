@@ -19,6 +19,7 @@ type Store interface {
 
 	// GetRepoName gets a repo by its full name.
 	GetRepoName(string) (*model.Repo, error)
+	GetRepoScmName(int64, string) (*model.Repo, error)
 
 	SecretCreate(*model.Secret) error
 
@@ -43,6 +44,10 @@ func RepoCreate(c echo.Context, repo *model.Repo) error {
 
 func GetRepoOwnerName(c echo.Context, owner, name string) (*model.Repo, error) {
 	return FromContext(c).GetRepoName(owner + "/" + name)
+}
+
+func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*model.Repo, error) {
+	return FromContext(c).GetRepoScmName(scmID, owner+"/"+name)
 }
 
 func SecretCreate(c echo.Context, secret *model.Secret) error {

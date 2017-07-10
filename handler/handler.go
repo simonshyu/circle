@@ -116,7 +116,7 @@ func PostRepo(c echo.Context) error {
 	}
 
 	// error if the repository already exists
-	_, err = store.GetRepoOwnerName(c, owner, name)
+	_, err = store.GetRepoScmIDOwnerName(c, scmId, owner, name)
 	if err == nil {
 		c.String(http.StatusConflict, "Repository already exists.")
 		return err
