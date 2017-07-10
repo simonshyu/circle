@@ -10,4 +10,5 @@ type Repo struct {
 	Clone     string `json:"clone_url,omitempty"      meddler:"repo_clone"`
 	Branch    string `json:"default_branch,omitempty" meddler:"repo_branch"`
 	AllowPush bool   `json:"allow_push"               meddler:"repo_allow_push"`
+	Hash      string `json:"-"                        meddler:"repo_hash"`
 }

@@ -9,4 +9,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_owner         VARCHAR(250)
 ,repo_name          VARCHAR(250)
 ,repo_allow_push    TINYINT(1)
+,repo_hash          VARCHAR(500)
+
+,UNIQUE(repo_scm_id, repo_owner, repo_name)
 );

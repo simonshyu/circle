@@ -1,11 +1,16 @@
 package handler
 
 import (
-	// "fmt"
+	"encoding/base32"
+	"fmt"
+	"github.com/gorilla/securecookie"
+
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
 	"github.com/SimonXming/circle/utils"
+	"github.com/SimonXming/circle/utils/httputil"
+	"github.com/SimonXming/circle/utils/token"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -123,14 +128,29 @@ func PostRepo(c echo.Context) error {
 	}
 	r.ScmId = scmId
 	r.AllowPush = true
+	r.Hash = base32.StdEncoding.EncodeToString(
+		securecookie.GenerateRandomKey(32),
+	)
 
-	link := "http://localhost:8080/some/hook/url?access_token=123"
+	// crates the jwt token used to verify the repository
+	t := token.New(token.HookToken, r.FullName)
+	sig, err := t.Sign(r.Hash)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Repository already exists.")
+		return err
+	}
+
+	link := fmt.Sprintf(
+		"%s/hook?access_token=%s",
+		httputil.GetURL(c.Request()),
+		sig,
+	)
 
 	// activate the repository before we make any
 	// local changes to the database.
 	err = remote.Activate(c, r, link)
 	if err != nil {
-		c.String(500, err.Error())
+		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
