@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/sha256"
 	"encoding/base32"
 	"fmt"
 	"github.com/gorilla/securecookie"
@@ -128,6 +129,7 @@ func PostRepo(c echo.Context) error {
 	}
 	r.ScmId = scmId
 	r.AllowPush = true
+	r.AllowPull = true
 	r.Hash = base32.StdEncoding.EncodeToString(
 		securecookie.GenerateRandomKey(32),
 	)
@@ -168,8 +170,30 @@ func PostConfig(c echo.Context) error {
 		c.Error(err)
 		return err
 	}
-	println(repoID)
 
+	repo, err := store.RepoLoad(c, repoID)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	in := new(model.Config)
+	if err := c.Bind(in); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	config := &model.Config{
+		RepoID: repo.ID,
+		Data:   in.Data,
+	}
+	config.Hash = shasum([]byte(in.Data))
+
+	err = store.ConfigCreate(c, config)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
 	return nil
 }
 
@@ -192,4 +216,9 @@ func PostSecret(c echo.Context) error {
 		return err
 	}
 	return nil
+}
+
+func shasum(raw []byte) string {
+	sum := sha256.Sum256(raw)
+	return fmt.Sprintf("%x", sum)
 }

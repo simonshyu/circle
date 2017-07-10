@@ -16,6 +16,7 @@ type Store interface {
 	ConfigLoad(int64) (*model.Config, error)
 
 	RepoCreate(*model.Repo) error
+	RepoLoad(int64) (*model.Repo, error)
 
 	// GetRepoName gets a repo by its full name.
 	GetRepoName(string) (*model.Repo, error)
@@ -40,6 +41,10 @@ func ScmAccountLoad(c echo.Context, id int64) (*model.ScmAccount, error) {
 
 func RepoCreate(c echo.Context, repo *model.Repo) error {
 	return FromContext(c).RepoCreate(repo)
+}
+
+func RepoLoad(c echo.Context, id int64) (*model.Repo, error) {
+	return FromContext(c).RepoLoad(id)
 }
 
 func GetRepoOwnerName(c echo.Context, owner, name string) (*model.Repo, error) {

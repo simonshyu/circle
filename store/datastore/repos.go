@@ -4,11 +4,19 @@ import (
 	// "fmt"
 
 	"github.com/SimonXming/circle/model"
+	"github.com/SimonXming/circle/store/datastore/sql"
 	"github.com/russross/meddler"
 )
 
 func (db *datastore) RepoCreate(repo *model.Repo) error {
 	return meddler.Insert(db, repoTable, repo)
+}
+
+func (db *datastore) RepoLoad(id int64) (*model.Repo, error) {
+	stmt := sql.Lookup(db.driver, "repo-find-id")
+	repo := new(model.Repo)
+	err := meddler.QueryRow(db, repo, stmt, id)
+	return repo, err
 }
 
 func (db *datastore) GetRepoName(name string) (*model.Repo, error) {

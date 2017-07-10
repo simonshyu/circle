@@ -9,6 +9,8 @@ type Repo struct {
 	Name      string `json:"name,omitempty"           meddler:"repo_name"`
 	Clone     string `json:"clone_url,omitempty"      meddler:"repo_clone"`
 	Branch    string `json:"default_branch,omitempty" meddler:"repo_branch"`
+	AllowPull bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
 	AllowPush bool   `json:"allow_push"               meddler:"repo_allow_push"`
+	AllowTag  bool   `json:"allow_tags"               meddler:"repo_allow_tags"`
 	Hash      string `json:"-"                        meddler:"repo_hash"`
 }
