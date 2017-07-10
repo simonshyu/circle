@@ -136,7 +136,7 @@ func PostRepo(c echo.Context) error {
 	t := token.New(token.HookToken, r.FullName)
 	sig, err := t.Sign(r.Hash)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Repository already exists.")
+		c.String(http.StatusBadRequest, "Generate webhook token failed.")
 		return err
 	}
 

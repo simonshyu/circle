@@ -128,13 +128,12 @@ func (g *Gitlab) Activate(r *model.Repo, link string) error {
 		return err
 	}
 
-	// circleUrl := "http://localhost:8000/hook?access_token=1234"
-	circleUrl := fmt.Sprintf("%s://%s", uri.Scheme, uri.Host)
-	circleToken := uri.Query().Get("access_token")
+	hookUrl := fmt.Sprintf("%s://%s%s", uri.Scheme, uri.Host, uri.Path)
+	hookToken := uri.Query().Get("access_token")
 	ssl_verify := g.SkipVerify
 	all_push := r.AllowPush
 
-	err = client.AddProjectHook(id, circleUrl, circleToken, all_push, ssl_verify)
+	err = client.AddProjectHook(id, hookUrl, hookToken, all_push, ssl_verify)
 	if err != nil {
 		return err
 	}
