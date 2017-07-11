@@ -9,30 +9,10 @@ var index = map[string]string{
 	"scm-account-list":    scmAccountList,
 	"scm-account-find-id": scmAccountFindId,
 	"repo-find-id":        repoFindId,
+	"repo-update-counter": repoUpdateCounter,
 	"config-find-id":      configFindId,
 	"config-find-repo":    configFindRepo,
 }
-
-var configFindId = `
-SELECT
- config_id
-,config_repo_id
-,config_hash
-,config_data
-FROM config
-WHERE config_id = ?
-`
-
-var configFindRepo = `
-SELECT
- config_id
-,config_repo_id
-,config_hash
-,config_data
-FROM config
-WHERE config_repo_id = ?
-LIMIT 1
-`
 
 var scmAccountList = `
 SELECT
@@ -69,7 +49,35 @@ SELECT
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_counter
 ,repo_hash
 FROM repos
 WHERE repo_id = ?
+`
+
+var repoUpdateCounter = `
+UPDATE repos SET repo_counter = ?
+WHERE repo_counter = ?
+  AND repo_id = ?
+`
+
+var configFindId = `
+SELECT
+ config_id
+,config_repo_id
+,config_hash
+,config_data
+FROM config
+WHERE config_id = ?
+`
+
+var configFindRepo = `
+SELECT
+ config_id
+,config_repo_id
+,config_hash
+,config_data
+FROM config
+WHERE config_repo_id = ?
+LIMIT 1
 `

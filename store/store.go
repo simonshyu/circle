@@ -25,7 +25,9 @@ type Store interface {
 
 	SecretCreate(*model.Secret) error
 
-	BuildCreate(*model.Build) error
+	BuildCreate(*model.Build, ...*model.Proc) error
+
+	ProcCreate([]*model.Proc) error
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {
@@ -38,6 +40,14 @@ func ScmAccountList(c echo.Context) ([]*model.ScmAccount, error) {
 
 func ScmAccountLoad(c echo.Context, id int64) (*model.ScmAccount, error) {
 	return FromContext(c).ScmAccountLoad(id)
+}
+
+func ConfigCreate(c echo.Context, conf *model.Config) error {
+	return FromContext(c).ConfigCreate(conf)
+}
+
+func ConfigFind(c echo.Context, repo *model.Repo) (*model.Config, error) {
+	return FromContext(c).ConfigFind(repo)
 }
 
 func RepoCreate(c echo.Context, repo *model.Repo) error {
@@ -56,14 +66,14 @@ func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*mo
 	return FromContext(c).GetRepoScmName(scmID, owner+"/"+name)
 }
 
-func ConfigCreate(c echo.Context, conf *model.Config) error {
-	return FromContext(c).ConfigCreate(conf)
-}
-
-func ConfigFind(c echo.Context, repo *model.Repo) (*model.Config, error) {
-	return FromContext(c).ConfigFind(repo)
-}
-
 func SecretCreate(c echo.Context, secret *model.Secret) error {
 	return FromContext(c).SecretCreate(secret)
+}
+
+func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error {
+	return FromContext(c).BuildCreate(build, procs...)
+}
+
+func ProcCreate(c echo.Context, procs []*model.Proc) error {
+	return FromContext(c).ProcCreate(procs)
 }

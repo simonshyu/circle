@@ -12,5 +12,6 @@ type Repo struct {
 	AllowPull bool   `json:"allow_pr"                 meddler:"repo_allow_pr"`
 	AllowPush bool   `json:"allow_push"               meddler:"repo_allow_push"`
 	AllowTag  bool   `json:"allow_tags"               meddler:"repo_allow_tags"`
+	Counter   int    `json:"last_build"               meddler:"repo_counter"`
 	Hash      string `json:"-"                        meddler:"repo_hash"`
 }

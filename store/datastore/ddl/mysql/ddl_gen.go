@@ -36,6 +36,14 @@ var migrations = []struct {
 		name: "create-table-scm-account",
 		stmt: createTableScmAccount,
 	},
+	{
+		name: "create-table-procs",
+		stmt: createTableProcs,
+	},
+	{
+		name: "create-index-procs-build",
+		stmt: createIndexProcsBuild,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -127,6 +135,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_allow_pr      TINYINT(1)
 ,repo_allow_push    TINYINT(1)
 ,repo_allow_tags    TINYINT(1)
+,repo_counter       INTEGER
 ,repo_hash          VARCHAR(500)
 
 ,UNIQUE(repo_scm_id, repo_owner, repo_name)
@@ -140,12 +149,21 @@ CREATE TABLE IF NOT EXISTS repos (
 var createTableBuilds = `
 CREATE TABLE IF NOT EXISTS builds (
  build_id        INTEGER PRIMARY KEY AUTO_INCREMENT
+,build_config_id INTEGER
 ,build_repo_id   INTEGER
 ,build_number    INTEGER
+,build_event     VARCHAR(500)
+,build_status    VARCHAR(500)
+,build_error     VARCHAR(500)
+,build_enqueued  INTEGER
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
-,build_config_id INTEGER
+,build_commit    VARCHAR(500)
+,build_branch    VARCHAR(500)
+,build_ref       VARCHAR(500)
+,build_refspec   VARCHAR(1000)
+,build_remote    VARCHAR(500)
 
 ,UNIQUE(build_number, build_repo_id)
 );
@@ -203,4 +221,33 @@ CREATE TABLE IF NOT EXISTS scm_account (
 ,scm_private_token VARCHAR(250)
 ,scm_type          VARCHAR(50)
 );
+`
+
+//
+// 06_create_table_procs.sql
+//
+
+var createTableProcs = `
+CREATE TABLE IF NOT EXISTS procs (
+ proc_id         INTEGER PRIMARY KEY AUTO_INCREMENT
+,proc_build_id   INTEGER
+,proc_pid        INTEGER
+,proc_ppid       INTEGER
+,proc_pgid       INTEGER
+,proc_name       VARCHAR(250)
+,proc_state      VARCHAR(250)
+,proc_error      VARCHAR(500)
+,proc_exit_code  INTEGER
+,proc_started    INTEGER
+,proc_stopped    INTEGER
+,proc_machine    VARCHAR(250)
+,proc_platform   VARCHAR(250)
+,proc_environ    VARCHAR(2000)
+
+,UNIQUE(proc_build_id, proc_pid)
+);
+`
+
+var createIndexProcsBuild = `
+CREATE INDEX proc_build_ix ON procs (proc_build_id);
 `
