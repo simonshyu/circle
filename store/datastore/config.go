@@ -19,4 +19,11 @@ func (db *datastore) ConfigLoad(id int64) (*model.Config, error) {
 	return conf, err
 }
 
+func (db *datastore) ConfigFind(repo *model.Repo) (*model.Config, error) {
+	stmt := sql.Lookup(db.driver, "config-find-repo")
+	conf := new(model.Config)
+	err := meddler.QueryRow(db, conf, stmt, repo.ID)
+	return conf, err
+}
+
 const configTable = "config"

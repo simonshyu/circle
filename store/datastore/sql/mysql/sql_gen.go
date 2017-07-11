@@ -10,6 +10,7 @@ var index = map[string]string{
 	"scm-account-find-id": scmAccountFindId,
 	"repo-find-id":        repoFindId,
 	"config-find-id":      configFindId,
+	"config-find-repo":    configFindRepo,
 }
 
 var configFindId = `
@@ -20,6 +21,17 @@ SELECT
 ,config_data
 FROM config
 WHERE config_id = ?
+`
+
+var configFindRepo = `
+SELECT
+ config_id
+,config_repo_id
+,config_hash
+,config_data
+FROM config
+WHERE config_repo_id = ?
+LIMIT 1
 `
 
 var scmAccountList = `

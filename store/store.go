@@ -14,6 +14,7 @@ type Store interface {
 
 	ConfigCreate(*model.Config) error
 	ConfigLoad(int64) (*model.Config, error)
+	ConfigFind(*model.Repo) (*model.Config, error)
 
 	RepoCreate(*model.Repo) error
 	RepoLoad(int64) (*model.Repo, error)
@@ -57,6 +58,10 @@ func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*mo
 
 func ConfigCreate(c echo.Context, conf *model.Config) error {
 	return FromContext(c).ConfigCreate(conf)
+}
+
+func ConfigFind(c echo.Context, repo *model.Repo) (*model.Config, error) {
+	return FromContext(c).ConfigFind(repo)
 }
 
 func SecretCreate(c echo.Context, secret *model.Secret) error {
