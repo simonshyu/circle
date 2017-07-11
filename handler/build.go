@@ -21,7 +21,7 @@ import (
 
 type builder struct {
 	Repo *model.Repo
-	// Curr *model.Build
+	Curr *model.Build
 	// Last  *model.Build
 	// Netrc *model.Netrc
 	// Secs []*model.Secret
@@ -52,7 +52,7 @@ func PostBuild(c echo.Context) error {
 	fmt.Printf("%v", conf.Data)
 
 	build := new(model.Build)
-	build.ID = 0
+	build.RepoID = repoID
 	build.Number = 0
 	build.Status = model.StatusPending
 	build.Started = 0
@@ -70,6 +70,7 @@ func PostBuild(c echo.Context) error {
 
 	b := builder{
 		Repo: repo,
+		Curr: build,
 		Envs: envs,
 		Link: httputil.GetURL(c.Request()),
 		Yaml: conf.Data,
