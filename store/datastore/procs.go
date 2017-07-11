@@ -10,9 +10,11 @@ import (
 
 func (db *datastore) ProcCreate(procs []*model.Proc) error {
 	for _, proc := range procs {
-		if err := meddler.Insert(db, "procs", proc); err != nil {
+		if err := meddler.Insert(db, procsTable, proc); err != nil {
 			return err
 		}
 	}
 	return nil
 }
+
+const procsTable = "procs"

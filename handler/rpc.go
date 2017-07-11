@@ -24,6 +24,12 @@ var Config = struct {
 		// Registries model.RegistryStore
 		// Secrets model.SecretStore
 	}
+	Pipeline struct {
+		Limits     model.ResourceLimit
+		Volumes    []string
+		Networks   []string
+		Privileged []string
+	}
 }{}
 
 type RPC struct {

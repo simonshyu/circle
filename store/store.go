@@ -26,6 +26,7 @@ type Store interface {
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build, ...*model.Proc) error
+	BuildUpdate(*model.Build) error
 
 	ProcCreate([]*model.Proc) error
 }
@@ -72,6 +73,10 @@ func SecretCreate(c echo.Context, secret *model.Secret) error {
 
 func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error {
 	return FromContext(c).BuildCreate(build, procs...)
+}
+
+func BuildUpdate(c echo.Context, build *model.Build) error {
+	return FromContext(c).BuildUpdate(build)
 }
 
 func ProcCreate(c echo.Context, procs []*model.Proc) error {

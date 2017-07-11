@@ -44,4 +44,19 @@ func server(c *cli.Context) error {
 func setupEvilGlobals(c *cli.Context, v store.Store) {
 	// storage
 	ciserver.Config.Storage.Config = v
+
+	ciserver.Config.Pipeline.Limits.MemSwapLimit = 100
+	ciserver.Config.Pipeline.Limits.MemLimit = 100
+	ciserver.Config.Pipeline.Limits.ShmSize = 64
+	ciserver.Config.Pipeline.Limits.CPUQuota = 0
+	ciserver.Config.Pipeline.Limits.CPUShares = 0
+	ciserver.Config.Pipeline.Limits.CPUSet = ""
+
+	ciserver.Config.Pipeline.Networks = []string{}
+	ciserver.Config.Pipeline.Volumes = []string{}
+	ciserver.Config.Pipeline.Privileged = []string{
+		"plugins/docker",
+		"plugins/gcr",
+		"plugins/ecr",
+	}
 }

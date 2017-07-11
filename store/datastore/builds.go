@@ -64,4 +64,8 @@ func (db *datastore) incrementRepo(id int64, old, new int) (int, error) {
 	return new, nil
 }
 
+func (db *datastore) BuildUpdate(build *model.Build) error {
+	return meddler.Update(db, buildTable, build)
+}
+
 const buildTable = "builds"
