@@ -44,6 +44,7 @@ func server(c *cli.Context) error {
 func setupEvilGlobals(c *cli.Context, v store.Store) {
 	// storage
 	ciserver.Config.Storage.Config = v
+	ciserver.Config.Services.Queue = setupQueue(c, v)
 
 	ciserver.Config.Pipeline.Limits.MemSwapLimit = 100
 	ciserver.Config.Pipeline.Limits.MemLimit = 100

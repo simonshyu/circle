@@ -38,7 +38,7 @@ func loop(c *cli.Context) error {
 	endpoint := "ws://localhost:8000/ws/broker"
 	filter := rpc2.Filter{
 		Labels: map[string]string{
-			"platform": "linux",
+			"platform": "linux/amd64",
 		},
 	}
 	client, err := rpc2.NewClient(
@@ -116,7 +116,9 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		return nil
 	})
 
+	println("Trying get a work ...")
 	work, err := client.Next(ctx, filter)
+	println("Success get a work.")
 	if err != nil {
 		return err
 	}

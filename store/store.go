@@ -29,6 +29,10 @@ type Store interface {
 	BuildUpdate(*model.Build) error
 
 	ProcCreate([]*model.Proc) error
+
+	TaskList() ([]*model.Task, error)
+	TaskInsert(*model.Task) error
+	TaskDelete(string) error
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {

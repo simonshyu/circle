@@ -44,6 +44,10 @@ var migrations = []struct {
 		name: "create-index-procs-build",
 		stmt: createIndexProcsBuild,
 	},
+	{
+		name: "create-table-tasks",
+		stmt: createTableTasks,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -250,4 +254,16 @@ CREATE TABLE IF NOT EXISTS procs (
 
 var createIndexProcsBuild = `
 CREATE INDEX proc_build_ix ON procs (proc_build_id);
+`
+
+//
+// 07_create_table_tasks.sql
+//
+
+var createTableTasks = `
+CREATE TABLE IF NOT EXISTS tasks (
+ task_id     VARCHAR(250) PRIMARY KEY
+,task_data   MEDIUMBLOB
+,task_labels MEDIUMBLOB
+);
 `

@@ -1,5 +1,5 @@
-hash: 2c97299051d734ae646e62179f6d99e1b415dfbf155595ea3eb5bd2219c9361b
-updated: 2017-07-10T14:33:20.242549929+08:00
+hash: a749a109c922fa859fa7901564e8b547ec86b3cee0fccf4b14b0998852693e3a
+updated: 2017-07-13T12:25:59.692095968+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -48,6 +48,12 @@ imports:
   - yaml
 - name: github.com/docker/libtrust
   version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
+- name: github.com/drone/drone
+  version: 0d69426b2c96b5501b1e1e33e6f74993febf2291
+  subpackages:
+  - store/datastore/sql
+  - store/datastore/sql/postgres
+  - store/datastore/sql/sqlite
 - name: github.com/flynn/go-shlex
   version: 3f9db97f856818214da2e1057f8ad84803971cff
 - name: github.com/ghodss/yaml
@@ -95,13 +101,16 @@ imports:
   - pipeline/frontend
   - pipeline/frontend/yaml
   - pipeline/frontend/yaml/compiler
+  - pipeline/frontend/yaml/matrix
   - pipeline/frontend/yaml/types
   - pipeline/interrupt
   - pipeline/multipart
   - pipeline/rpc
   - pipeline/rpc2
+- name: github.com/SimonXming/queue
+  version: 63b1974bbcc9b4b251ed18f88edc3a643eb64ff7
 - name: github.com/Sirupsen/logrus
-  version: 202f25545ea4cf9b191ff7f846df5d87c9382c2b
+  version: 7f976d3a76720c4c27af2ba716b85d2e0a7e38b1
 - name: github.com/sourcegraph/jsonrpc2
   version: b02337b177765febba753be4b7d9c26e3a9fd220
   subpackages:

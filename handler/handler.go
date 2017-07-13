@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/securecookie"
 
+	"context"
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
@@ -22,6 +23,10 @@ func NewEchoServer() *echo.Echo {
 }
 
 func GetRoot(c echo.Context) error {
+	info := Config.Services.Queue.Info(context.Background())
+	println(len(info.Pending))
+	println(len(info.Running))
+	fmt.Printf("%v\r\n", info.Stats)
 	return c.String(http.StatusOK, "Hello, World!")
 }
 

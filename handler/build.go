@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"math/rand"
@@ -14,6 +16,9 @@ import (
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/matrix"
+	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	"github.com/SimonXming/queue"
+
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"
@@ -105,6 +110,27 @@ func PostBuild(c echo.Context) error {
 
 	c.JSON(http.StatusAccepted, build)
 
+	for _, item := range items {
+		task := new(queue.Task)
+		task.ID = fmt.Sprint(item.Proc.ID)
+		task.Labels = map[string]string{}
+		task.Labels["platform"] = item.Platform
+		for k, v := range item.Labels {
+			task.Labels[k] = v
+		}
+
+		task.Data, _ = json.Marshal(rpc2.Pipeline{
+			ID:     fmt.Sprint(item.Proc.ID),
+			Config: item.Config,
+			// Timeout: b.Repo.Timeout,
+			Timeout: 60,
+		})
+
+		fmt.Printf("%v", task)
+		// Config.Services.Logs.Open(context.Background(), task.ID)
+		Config.Services.Queue.Push(context.Background(), task)
+	}
+
 	return nil
 }
 
@@ -136,7 +162,7 @@ func metadataFromStruct(repo *model.Repo, build *model.Build, proc *model.Proc, 
 			Matrix: proc.Environ,
 		},
 		Sys: frontend.System{
-			Name: "drone",
+			Name: "circle",
 			Link: link,
 			Arch: "linux/amd64",
 		},

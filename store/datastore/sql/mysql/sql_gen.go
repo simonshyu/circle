@@ -12,6 +12,8 @@ var index = map[string]string{
 	"repo-update-counter": repoUpdateCounter,
 	"config-find-id":      configFindId,
 	"config-find-repo":    configFindRepo,
+	"task-list":           taskList,
+	"task-delete":         taskDelete,
 }
 
 var scmAccountList = `
@@ -80,4 +82,16 @@ SELECT
 FROM config
 WHERE config_repo_id = ?
 LIMIT 1
+`
+
+var taskList = `
+SELECT
+ task_id
+,task_data
+,task_labels
+FROM tasks
+`
+
+var taskDelete = `
+DELETE FROM tasks WHERE task_id = ?
 `
