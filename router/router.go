@@ -7,13 +7,25 @@ import (
 
 func Load(e *echo.Echo) {
 	e.GET("/", handler.GetRoot)
-	// e.POST("/repo", handler.PostRepo)
-	e.POST("/scm", handler.PostScmAccount)
-	e.GET("/scm", handler.GetScmAccounts)
-	e.GET("/scm/:scmID", handler.GetScmAccount)
-	e.GET("/scm/:scmID/repos/remote", handler.GetRemoteRepos)
-	e.POST("/scm/:scmID/repos/:owner/:name", handler.PostRepo)
-	e.POST("/scm/:scmID/repos/:repoID/config", handler.PostConfig)
-	e.POST("/scm/:scmID/repos/:repoID/build", handler.PostBuild)
-	e.GET("/ws/broker", handler.RPCHandler)
+
+	scmGroup := e.Group("/scm")
+	{
+		scmGroup.POST("", handler.PostScmAccount)
+		scmGroup.GET("", handler.GetScmAccounts)
+		// scmGroup.GET("/repo", handler.GetAllRepo)
+		scmGroup.GET("/:scmID", handler.GetScmAccount)
+		scmGroup.GET("/:scmID/remote", handler.GetRemoteRepos)
+
+		repoGroup := scmGroup.Group("/:scmID/repo")
+		{
+			repoGroup.POST("", handler.PostRepo)
+			// repoGroup.GET("", handler.GetRepos)
+			repoGroup.POST("/:repoID/config", handler.PostConfig)
+			repoGroup.POST("/:repoID/build", handler.PostBuild)
+		}
+	}
+
+	websocketGroup := e.Group("/ws")
+	websocketGroup.GET("/broker", handler.RPCHandler)
+
 }
