@@ -29,6 +29,11 @@ func GetRoot(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
 
+func GetQueueInfo(c echo.Context) error {
+	info := Config.Services.Queue.Info(context.Background())
+	return c.JSON(http.StatusOK, info.Stats)
+}
+
 func PostScmAccount(c echo.Context) error {
 	in := new(model.ScmAccount)
 	if err := c.Bind(in); err != nil {

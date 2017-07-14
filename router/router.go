@@ -7,6 +7,7 @@ import (
 
 func Load(e *echo.Echo) {
 	e.GET("/", handler.GetRoot)
+	e.GET("/queue/info", handler.GetQueueInfo)
 
 	scmGroup := e.Group("/scm")
 	{
