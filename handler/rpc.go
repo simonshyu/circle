@@ -1,5 +1,7 @@
 package handler
 
+// TODO: convert rpc2 to rpc
+
 import (
 	"context"
 	"encoding/json"
