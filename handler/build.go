@@ -68,10 +68,11 @@ func PostBuild(c echo.Context) error {
 	build := new(model.Build)
 	build.RepoID = repoID
 	build.Number = 0
+	build.Event = "pull_request"
 	build.Ref = "refs/heads/master"
 	build.Branch = "master"
 	build.Refspec = "refs/heads/master"
-	build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
+	// build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
 	build.Status = model.StatusPending
 	build.Started = 0
 	build.Finished = 0

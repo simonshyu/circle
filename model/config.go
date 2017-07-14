@@ -1,6 +1,7 @@
 package model
 
 // ConfigStore persists pipeline configuration to storage.
+// Often access by handler.Config.Storage.Config
 type ConfigStore interface {
 	ConfigCreate(*Config) error
 	ConfigLoad(int64) (*Config, error)

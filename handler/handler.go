@@ -10,7 +10,6 @@ import (
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/utils"
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/circle/utils/token"
 	"github.com/labstack/echo"
@@ -28,6 +27,11 @@ func GetRoot(c echo.Context) error {
 	println(len(info.Running))
 	fmt.Printf("%v\r\n", info.Stats)
 	return c.String(http.StatusOK, "Hello, World!")
+}
+
+func GetQueueInfo(c echo.Context) error {
+	info := Config.Services.Queue.Info(context.Background())
+	return c.JSON(http.StatusOK, info.Stats)
 }
 
 func PostScmAccount(c echo.Context) error {
@@ -85,19 +89,13 @@ func GetRemoteRepos(c echo.Context) error {
 		c.Error(err)
 		return err
 	}
-	account, err := store.ScmAccountLoad(c, scmId)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return err
-	}
-	err = utils.SetupRemote(c, account)
+	_, err = store.SetupRemoteWithScmID(c, scmId)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
-	remote := remote.FromContext(c)
-	repos, err := remote.Repos()
+	repos, err := remote.Repos(c)
 	if err != nil {
 		return err
 	}
@@ -105,29 +103,32 @@ func GetRemoteRepos(c echo.Context) error {
 }
 
 func PostRepo(c echo.Context) error {
-	owner := c.Param("owner")
-	name := c.Param("name")
 	scmId, err := strconv.ParseInt(c.Param("scmID"), 10, 64)
 	if err != nil {
 		c.Error(err)
 		return err
 	}
 
-	account, err := store.ScmAccountLoad(c, scmId)
+	in := new(model.Repo)
+	if err := c.Bind(in); err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	_, err = store.SetupRemoteWithScmID(c, scmId)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
-	err = utils.SetupRemote(c, account)
 
-	r, err := remote.Repo(c, owner, name)
+	r, err := remote.Repo(c, in.Owner, in.Name)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
 	// error if the repository already exists
-	_, err = store.GetRepoScmIDOwnerName(c, scmId, owner, name)
+	_, err = store.GetRepoScmIDOwnerName(c, scmId, r.Owner, r.Name)
 	if err == nil {
 		c.String(http.StatusConflict, "Repository already exists.")
 		return err

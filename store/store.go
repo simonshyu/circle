@@ -4,6 +4,7 @@ import (
 	// "io"
 
 	"github.com/SimonXming/circle/model"
+	"github.com/SimonXming/circle/utils"
 	"github.com/labstack/echo"
 )
 
@@ -85,4 +86,14 @@ func BuildUpdate(c echo.Context, build *model.Build) error {
 
 func ProcCreate(c echo.Context, procs []*model.Proc) error {
 	return FromContext(c).ProcCreate(procs)
+}
+
+// helper: 合并 ScmAccountLoad 和 SetupRemote 的功能
+func SetupRemoteWithScmID(c echo.Context, id int64) (*model.ScmAccount, error) {
+	account, err := FromContext(c).ScmAccountLoad(id)
+	if err != nil {
+		return nil, err
+	}
+	err = utils.SetupRemote(c, account)
+	return account, err
 }

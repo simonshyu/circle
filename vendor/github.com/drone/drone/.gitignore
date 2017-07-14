@@ -1,9 +1,0 @@
-drone/drone
-*.sqlite
-*.txt
-*.out
-.env
-extras/
-release/
-
-server/swagger/files/*.json

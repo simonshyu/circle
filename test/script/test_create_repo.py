@@ -1,5 +1,10 @@
 import requests
 
-r = requests.post("http://localhost:8000/scm/1/repos/root/dcos-docker-demo")
+data = {
+    "owner": "root",
+    "name": "dcos-docker-demo"
+}
+
+r = requests.post("http://localhost:8000/scm/1/repo", json=data)
 
 print(r.content)
