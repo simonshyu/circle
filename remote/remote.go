@@ -18,7 +18,7 @@ type Remote interface {
 	Repos() ([]*model.Repo, error)
 
 	// private repositories from a remote system.
-	Netrc(r *model.Repo) (*model.Netrc, error)
+	Netrc(r *model.ScmAccount) (*model.Netrc, error)
 
 	// Activate activates a repository by creating the post-commit hook.
 	Activate(r *model.Repo, link string) error

@@ -13,6 +13,7 @@ import (
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -100,7 +101,6 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 	}
 
 	task, err := s.queue.Poll(c, fn)
-	println(task.Data)
 	if err != nil {
 		return nil, err
 	} else if task == nil {
@@ -119,5 +119,11 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 	// }
 
 	err = json.Unmarshal(task.Data, pipeline)
+
+	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/tmp_task_data.json"
+
+	pipelineJson, _ := json.Marshal(pipeline)
+	err = ioutil.WriteFile(path, pipelineJson, 0644)
+
 	return pipeline, err
 }

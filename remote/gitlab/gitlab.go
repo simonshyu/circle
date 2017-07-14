@@ -113,8 +113,12 @@ func (g *Gitlab) Repos() ([]*model.Repo, error) {
 	return repos, err
 }
 
-func (g *Gitlab) Netrc(r *model.Repo) (*model.Netrc, error) {
-	return nil, nil
+func (g *Gitlab) Netrc(r *model.ScmAccount) (*model.Netrc, error) {
+	return &model.Netrc{
+		Login:    r.Login,
+		Password: r.Password,
+		Machine:  r.Host,
+	}, nil
 }
 
 func (g *Gitlab) Activate(r *model.Repo, link string) error {

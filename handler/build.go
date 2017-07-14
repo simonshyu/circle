@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/SimonXming/circle/model"
+	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
+	"github.com/SimonXming/circle/utils"
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/pipeline/pipeline/backend"
 	"github.com/SimonXming/pipeline/pipeline/frontend"
@@ -42,11 +44,34 @@ func PostBuild(c echo.Context) error {
 		c.String(http.StatusNotFound, err.Error())
 		return err
 	}
-	fmt.Printf("%v", conf.Data)
+
+	account, err := store.ScmAccountLoad(c, repo.ScmId)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	err = utils.SetupRemote(c, account)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	remote := remote.FromContext(c)
+
+	netrc, err := remote.Netrc(account)
+	if err != nil {
+		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
+		c.String(http.StatusNotFound, err.Error())
+		return err
+	}
 
 	build := new(model.Build)
 	build.RepoID = repoID
 	build.Number = 0
+	build.Ref = "refs/heads/master"
+	build.Branch = "master"
+	build.Refspec = "refs/heads/master"
+	build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
 	build.Status = model.StatusPending
 	build.Started = 0
 	build.Finished = 0
@@ -62,11 +87,12 @@ func PostBuild(c echo.Context) error {
 	envs["someEnv"] = "someValue"
 
 	b := builder{
-		Repo: repo,
-		Curr: build,
-		Envs: envs,
-		Link: httputil.GetURL(c.Request()),
-		Yaml: conf.Data,
+		Repo:  repo,
+		Curr:  build,
+		Netrc: netrc,
+		Envs:  envs,
+		Link:  httputil.GetURL(c.Request()),
+		Yaml:  conf.Data,
 	}
 	items, err := b.Build()
 	if err != nil {
@@ -126,7 +152,6 @@ func PostBuild(c echo.Context) error {
 			Timeout: 60,
 		})
 
-		fmt.Printf("%v", task)
 		// Config.Services.Logs.Open(context.Background(), task.ID)
 		Config.Services.Queue.Push(context.Background(), task)
 	}
@@ -173,7 +198,7 @@ type builder struct {
 	Repo *model.Repo
 	Curr *model.Build
 	// Last  *model.Build
-	// Netrc *model.Netrc
+	Netrc *model.Netrc
 	// Secs []*model.Secret
 	// Regs []*model.Registry
 	Link string
@@ -233,6 +258,15 @@ func (b *builder) Build() ([]*buildItem, error) {
 			compiler.WithVolumes(Config.Pipeline.Volumes...),
 			compiler.WithNetworks(Config.Pipeline.Networks...),
 			compiler.WithLocal(false),
+			compiler.WithOption(
+				compiler.WithNetrc(
+					b.Netrc.Login,
+					b.Netrc.Password,
+					b.Netrc.Machine,
+				),
+				true,
+				// b.Repo.IsPrivate,
+			),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",

@@ -46,9 +46,9 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	ciserver.Config.Storage.Config = v
 	ciserver.Config.Services.Queue = setupQueue(c, v)
 
-	ciserver.Config.Pipeline.Limits.MemSwapLimit = 100
-	ciserver.Config.Pipeline.Limits.MemLimit = 100
-	ciserver.Config.Pipeline.Limits.ShmSize = 64
+	ciserver.Config.Pipeline.Limits.MemSwapLimit = 0
+	ciserver.Config.Pipeline.Limits.MemLimit = 0
+	ciserver.Config.Pipeline.Limits.ShmSize = 0
 	ciserver.Config.Pipeline.Limits.CPUQuota = 0
 	ciserver.Config.Pipeline.Limits.CPUShares = 0
 	ciserver.Config.Pipeline.Limits.CPUSet = ""
