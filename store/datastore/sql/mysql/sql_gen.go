@@ -8,7 +8,9 @@ func Lookup(name string) string {
 var index = map[string]string{
 	"scm-account-list":    scmAccountList,
 	"scm-account-find-id": scmAccountFindId,
+	"repo-list":           repoList,
 	"repo-find-id":        repoFindId,
+	"repo-find-scm-id":    repoFindScmId,
 	"repo-update-counter": repoUpdateCounter,
 	"config-find-id":      configFindId,
 	"config-find-repo":    configFindRepo,
@@ -39,6 +41,23 @@ FROM scm_account
 WHERE scm_id = ?
 `
 
+var repoList = `
+SELECT
+ repo_id
+,repo_scm_id
+,repo_clone
+,repo_branch
+,repo_full_name
+,repo_owner
+,repo_name
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_tags
+,repo_counter
+,repo_hash
+FROM repos
+`
+
 var repoFindId = `
 SELECT
  repo_id
@@ -55,6 +74,25 @@ SELECT
 ,repo_hash
 FROM repos
 WHERE repo_id = ?
+`
+
+var repoFindScmId = `
+SELECT
+ repo_id
+,repo_scm_id
+,repo_clone
+,repo_branch
+,repo_full_name
+,repo_owner
+,repo_name
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_tags
+,repo_counter
+,repo_hash
+FROM repos
+WHERE repo_scm_id = ?
+ORDER BY repo_id ASC
 `
 
 var repoUpdateCounter = `

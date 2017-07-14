@@ -21,6 +21,8 @@ type Store interface {
 	RepoLoad(int64) (*model.Repo, error)
 
 	// GetRepoName gets a repo by its full name.
+	RepoList() ([]*model.Repo, error)
+	RepoFind(*model.ScmAccount) ([]*model.Repo, error)
 	GetRepoName(string) (*model.Repo, error)
 	GetRepoScmName(int64, string) (*model.Repo, error)
 
@@ -58,6 +60,14 @@ func ConfigFind(c echo.Context, repo *model.Repo) (*model.Config, error) {
 
 func RepoCreate(c echo.Context, repo *model.Repo) error {
 	return FromContext(c).RepoCreate(repo)
+}
+
+func RepoList(c echo.Context) ([]*model.Repo, error) {
+	return FromContext(c).RepoList()
+}
+
+func RepoFind(c echo.Context, scm *model.ScmAccount) ([]*model.Repo, error) {
+	return FromContext(c).RepoFind(scm)
 }
 
 func RepoLoad(c echo.Context, id int64) (*model.Repo, error) {

@@ -13,14 +13,14 @@ func Load(e *echo.Echo) {
 	{
 		scmGroup.POST("", handler.PostScmAccount)
 		scmGroup.GET("", handler.GetScmAccounts)
-		// scmGroup.GET("/repo", handler.GetAllRepo)
+		scmGroup.GET("/repo", handler.GetAllRepo)
 		scmGroup.GET("/:scmID", handler.GetScmAccount)
 		scmGroup.GET("/:scmID/remote", handler.GetRemoteRepos)
 
 		repoGroup := scmGroup.Group("/:scmID/repo")
 		{
 			repoGroup.POST("", handler.PostRepo)
-			// repoGroup.GET("", handler.GetRepos)
+			repoGroup.GET("", handler.GetRepos)
 			repoGroup.POST("/:repoID/config", handler.PostConfig)
 			repoGroup.POST("/:repoID/build", handler.PostBuild)
 		}

@@ -12,6 +12,20 @@ func (db *datastore) RepoCreate(repo *model.Repo) error {
 	return meddler.Insert(db, repoTable, repo)
 }
 
+func (db *datastore) RepoList() ([]*model.Repo, error) {
+	stmt := sql.Lookup(db.driver, "repo-list")
+	data := []*model.Repo{}
+	err := meddler.QueryAll(db, &data, stmt)
+	return data, err
+}
+
+func (db *datastore) RepoFind(scm *model.ScmAccount) ([]*model.Repo, error) {
+	stmt := sql.Lookup(db.driver, "repo-find-scm-id")
+	data := []*model.Repo{}
+	err := meddler.QueryAll(db, &data, stmt, scm.ID)
+	return data, err
+}
+
 func (db *datastore) RepoLoad(id int64) (*model.Repo, error) {
 	stmt := sql.Lookup(db.driver, "repo-find-id")
 	repo := new(model.Repo)
