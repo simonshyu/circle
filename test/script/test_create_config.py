@@ -22,6 +22,6 @@ data = {
     "data": config,
 }
 
-r = requests.post("http://localhost:8000/scm/1/repos/1/config", json=data)
+r = requests.post("http://localhost:8000/scm/1/repo/1/config", json=data)
 
 print(r.content)

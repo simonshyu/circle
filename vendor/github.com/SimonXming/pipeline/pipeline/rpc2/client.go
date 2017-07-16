@@ -30,6 +30,13 @@ const (
 	defaultBackoff     = 10 * time.Second
 )
 
+type (
+	updateReq struct {
+		ID    string `json:"id"`
+		State State  `json:"state"`
+	}
+)
+
 // Client represents an rpc client.
 type Client struct {
 	sync.Mutex
@@ -63,6 +70,18 @@ func (t *Client) Next(c context.Context, f Filter) (*Pipeline, error) {
 	res := new(Pipeline)
 	err := t.call(c, methodNext, f, res)
 	return res, err
+}
+
+// Init signals the pipeline is initialized.
+func (t *Client) Init(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodInit, &params, nil)
+}
+
+// Done signals the pipeline is complete.
+func (t *Client) Done(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodDone, &params, nil)
 }
 
 // Close closes the client connection.

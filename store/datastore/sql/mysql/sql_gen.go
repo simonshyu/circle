@@ -12,8 +12,11 @@ var index = map[string]string{
 	"repo-find-id":        repoFindId,
 	"repo-find-scm-id":    repoFindScmId,
 	"repo-update-counter": repoUpdateCounter,
+	"build-find-id":       buildFindId,
 	"config-find-id":      configFindId,
 	"config-find-repo":    configFindRepo,
+	"proc-find-build":     procsFindBuild,
+	"proc-find-id":        procFindId,
 	"task-list":           taskList,
 	"task-delete":         taskDelete,
 }
@@ -101,6 +104,28 @@ WHERE repo_counter = ?
   AND repo_id = ?
 `
 
+var buildFindId = `
+SELECT
+ build_id
+,build_config_id
+,build_repo_id
+,build_number
+,build_event
+,build_status
+,build_error
+,build_enqueued
+,build_created
+,build_started
+,build_finished
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+FROM builds
+WHERE build_id = ?
+`
+
 var configFindId = `
 SELECT
  config_id
@@ -120,6 +145,45 @@ SELECT
 FROM config
 WHERE config_repo_id = ?
 LIMIT 1
+`
+
+var procsFindBuild = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+ORDER BY proc_id ASC
+`
+
+var procFindId = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_id = ?
 `
 
 var taskList = `

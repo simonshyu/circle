@@ -123,6 +123,13 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		return err
 	}
 
+	state := rpc2.State{}
+	state.Started = time.Now().Unix()
+	err = client.Init(context.Background(), work.ID, state)
+	if err != nil {
+		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
+	}
+
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
@@ -132,6 +139,18 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 	if err != nil {
 		return err
 	}
+
+	state.Finished = time.Now().Unix()
+	state.Exited = true
+	state.ExitCode = 1
+	state.Error = "Some error."
+
+	log.Printf("pipeline: execution complete: %s", work.ID)
+	err = client.Done(context.Background(), work.ID, state)
+	if err != nil {
+		log.Printf("Pipeine: error signaling pipeline done: %s: %s", work.ID, err)
+	}
+
 	return nil
 }
 

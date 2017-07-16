@@ -51,6 +51,10 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 	switch req.Method {
 	case methodNext:
 		return s.next(ctx, req)
+	case methodInit:
+		return s.init(ctx, req)
+	case methodDone:
+		return s.done(ctx, req)
 	default:
 		return nil, errNoSuchMethod
 	}
@@ -64,4 +68,24 @@ func (s *Server) next(ctx context.Context, req *jsonrpc2.Request) (interface{}, 
 		return nil, err
 	}
 	return s.peer.Next(ctx, in)
+}
+
+// init unmarshals the rpc request parameters and invokes the peer.Init
+// procedure. The results are retuned and written to the rpc response.
+func (s *Server) init(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
+	in := new(updateReq)
+	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {
+		return nil, err
+	}
+	return nil, s.peer.Init(ctx, in.ID, in.State)
+}
+
+// done unmarshals the rpc request parameters and invokes the peer.Done
+// procedure. The results are retuned and written to the rpc response.
+func (s *Server) done(ctx context.Context, req *jsonrpc2.Request) (interface{}, error) {
+	in := new(updateReq)
+	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {
+		return nil, err
+	}
+	return nil, s.peer.Done(ctx, in.ID, in.State)
 }

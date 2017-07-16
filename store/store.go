@@ -29,9 +29,13 @@ type Store interface {
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build, ...*model.Proc) error
+	BuildLoad(int64) (*model.Build, error)
 	BuildUpdate(*model.Build) error
 
 	ProcCreate([]*model.Proc) error
+	ProcList(*model.Build) ([]*model.Proc, error)
+	ProcLoad(int64) (*model.Proc, error)
+	ProcUpdate(*model.Proc) error
 
 	TaskList() ([]*model.Task, error)
 	TaskInsert(*model.Task) error
@@ -90,12 +94,28 @@ func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error
 	return FromContext(c).BuildCreate(build, procs...)
 }
 
+func BuildLoad(c echo.Context, id int64) (*model.Build, error) {
+	return FromContext(c).BuildLoad(id)
+}
+
 func BuildUpdate(c echo.Context, build *model.Build) error {
 	return FromContext(c).BuildUpdate(build)
 }
 
 func ProcCreate(c echo.Context, procs []*model.Proc) error {
 	return FromContext(c).ProcCreate(procs)
+}
+
+func ProcList(c echo.Context, build *model.Build) ([]*model.Proc, error) {
+	return FromContext(c).ProcList(build)
+}
+
+func ProcLoad(c echo.Context, id int64) (*model.Proc, error) {
+	return FromContext(c).ProcLoad(id)
+}
+
+func ProcUpdate(c echo.Context, proc *model.Proc) error {
+	return FromContext(c).ProcUpdate(proc)
 }
 
 // helper: 合并 ScmAccountLoad 和 SetupRemote 的功能
