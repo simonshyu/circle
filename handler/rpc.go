@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/SimonXming/circle/model"
-	// "github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
 	"github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/SimonXming/queue"
@@ -47,14 +46,12 @@ var Config = struct {
 }{}
 
 type RPC struct {
-	// remote remote.Remote
 	queue queue.Queue
 	store store.Store
 }
 
 func RPCHandler(c echo.Context) error {
 	peer := RPC{
-		// remote: remote.FromContext(c),
 		store: store.FromContext(c),
 		queue: Config.Services.Queue,
 	}
@@ -121,12 +118,11 @@ func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
 		return err
 	}
 
-	repo, err := s.store.RepoLoad(build.RepoID)
-	if err != nil {
-		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
-		return err
-	}
-	println("129 repo", repo.ID)
+	// repo, err := s.store.RepoLoad(build.RepoID)
+	// if err != nil {
+	// 	log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
+	// 	return err
+	// }
 
 	if build.Status == model.StatusPending {
 		build.Status = model.StatusRunning
@@ -175,12 +171,11 @@ func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
 		return err
 	}
 
-	repo, err := s.store.RepoLoad(build.RepoID)
-	if err != nil {
-		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
-		return err
-	}
-	println("183 repo", repo.ID)
+	// repo, err := s.store.RepoLoad(build.RepoID)
+	// if err != nil {
+	// 	log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
+	// 	return err
+	// }
 
 	proc.Stopped = state.Finished
 	proc.Error = state.Error
