@@ -100,6 +100,7 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 }
 
 // Init implements the rpc.Init function
+// Init Build and Proc status and create_time
 func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
 	procID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -118,6 +119,7 @@ func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
 		return err
 	}
 
+	// if require repo data, uncomments blow
 	// repo, err := s.store.RepoLoad(build.RepoID)
 	// if err != nil {
 	// 	log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
@@ -245,4 +247,14 @@ func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
 	// s.pubsub.Publish(c, "topic/events", message)
 
 	return nil
+}
+
+// Wait implements the rpc.Wait function
+func (s *RPC) Wait(c context.Context, id string) error {
+	return s.queue.Wait(c, id)
+}
+
+// Extend implements the rpc.Extend function
+func (s *RPC) Extend(c context.Context, id string) error {
+	return s.queue.Extend(c, id)
 }

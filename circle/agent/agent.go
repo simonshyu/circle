@@ -123,6 +123,38 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		return err
 	}
 
+	timeout := time.Hour
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	cancelled := abool.New()
+	go func() {
+		if werr := client.Wait(ctx, work.ID); werr != nil {
+			cancelled.SetTo(true)
+			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
+			cancel()
+		} else {
+			log.Printf("pipeline: cancel channel closed: %s", work.ID)
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Printf("pipeline: cancel ping loop: %s", work.ID)
+				return
+			case <-time.After(time.Minute):
+				log.Printf("pipeline: ping queue: %s", work.ID)
+				client.Extend(ctx, work.ID)
+			}
+		}
+	}()
+
 	state := rpc2.State{}
 	state.Started = time.Now().Unix()
 	err = client.Init(context.Background(), work.ID, state)
@@ -142,8 +174,20 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 
 	state.Finished = time.Now().Unix()
 	state.Exited = true
-	state.ExitCode = 1
-	state.Error = "Some error."
+	if err != nil {
+		switch xerr := err.(type) {
+		case *pipeline.ExitError:
+			state.ExitCode = xerr.Code
+		default:
+			state.ExitCode = 1
+			state.Error = err.Error()
+		}
+		if cancelled.IsSet() {
+			state.ExitCode = 137
+		}
+	}
+
+	log.Printf("pipeline: execution complete: %s", work.ID)
 
 	log.Printf("pipeline: execution complete: %s", work.ID)
 	err = client.Done(context.Background(), work.ID, state)

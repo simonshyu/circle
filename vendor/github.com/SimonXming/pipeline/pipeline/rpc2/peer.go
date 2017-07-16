@@ -33,9 +33,15 @@ type Peer interface {
 	// Next returns the next pipeline in the queue.
 	Next(c context.Context, f Filter) (*Pipeline, error)
 
+	// Wait blocks until the pipeline is complete.
+	Wait(c context.Context, id string) error
+
 	// Init signals the pipeline is initialized.
 	Init(c context.Context, id string, state State) error
 
 	// Done signals the pipeline is complete.
 	Done(c context.Context, id string, state State) error
+
+	// Extend extends the pipeline deadline
+	Extend(c context.Context, id string) error
 }

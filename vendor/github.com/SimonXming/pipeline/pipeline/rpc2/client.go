@@ -72,6 +72,15 @@ func (t *Client) Next(c context.Context, f Filter) (*Pipeline, error) {
 	return res, err
 }
 
+// Wait blocks until the pipeline is complete.
+func (t *Client) Wait(c context.Context, id string) error {
+	// err := t.call(c, methodWait, id, nil)
+	// if err != nil && err.Error() == ErrCancelled.Error() {
+	// 	return ErrCancelled
+	// }
+	return t.call(c, methodWait, id, nil)
+}
+
 // Init signals the pipeline is initialized.
 func (t *Client) Init(c context.Context, id string, state State) error {
 	params := updateReq{id, state}
@@ -82,6 +91,11 @@ func (t *Client) Init(c context.Context, id string, state State) error {
 func (t *Client) Done(c context.Context, id string, state State) error {
 	params := updateReq{id, state}
 	return t.call(c, methodDone, &params, nil)
+}
+
+// Extend extends the pipeline deadline.
+func (t *Client) Extend(c context.Context, id string) error {
+	return t.call(c, methodExtend, id, nil)
 }
 
 // Close closes the client connection.
