@@ -149,5 +149,6 @@ func (t *Client) open() error {
 	}
 	stream := websocketrpc.NewObjectStream(conn)
 	t.conn = jsonrpc2.NewConn(context.Background(), stream, nil)
+	log.Printf("rpc: connected to: %s", t.endpoint)
 	return nil
 }
