@@ -8,6 +8,8 @@ import (
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
+	"math"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -27,6 +29,13 @@ import (
 	"os"
 )
 
+const (
+	maxFileUpload = 5000000
+	maxLogsUpload = 5000000
+	maxProcs      = 1
+	retryLimit    = math.MaxInt32
+)
+
 // Command exports the agent command.
 var Command = cli.Command{
 	Name:   "agent",
@@ -35,14 +44,25 @@ var Command = cli.Command{
 }
 
 func loop(c *cli.Context) error {
-	endpoint := "ws://localhost:8000/ws/broker"
+	endpoint, err := url.Parse(
+		"ws://localhost:8000/ws/broker",
+	)
+	if err != nil {
+		return err
+	}
 	filter := rpc2.Filter{
 		Labels: map[string]string{
 			"platform": "linux/amd64",
 		},
 	}
 	client, err := rpc2.NewClient(
-		endpoint,
+		endpoint.String(),
+		rpc2.WithRetryLimit(
+			retryLimit,
+		),
+		rpc2.WithBackoff(
+			time.Second*15,
+		),
 	)
 	if err != nil {
 		return err
@@ -57,7 +77,7 @@ func loop(c *cli.Context) error {
 	})
 
 	var wg sync.WaitGroup
-	parallel := 1
+	parallel := maxProcs
 	wg.Add(parallel)
 
 	for i := 0; i < parallel; i++ {
@@ -93,7 +113,6 @@ run 方法是 agent 的主要运行逻辑
 
 func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 	log.Println("pipeline: request next execution")
-	time.Sleep(time.Second * 1)
 
 	// path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
 
@@ -116,9 +135,8 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		return nil
 	})
 
-	println("Trying get a work ...")
+	log.Printf("Trying get a work ...")
 	work, err := client.Next(ctx, filter)
-	println("Success get a work.")
 	if err != nil {
 		return err
 	}
@@ -162,6 +180,7 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
 	}
 
+	log.Printf("Success get a work.")
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
