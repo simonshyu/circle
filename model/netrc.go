@@ -5,3 +5,7 @@ type Netrc struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
+
+/*
+Field Explanation:
+*/

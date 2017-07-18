@@ -43,6 +43,11 @@ func Repos(c echo.Context) ([]*model.Repo, error) {
 }
 
 // Repo fetches the named repository from the remote system.
+func Netrc(c echo.Context, account *model.ScmAccount) (*model.Netrc, error) {
+	return FromContext(c).Netrc(account)
+}
+
+// Repo fetches the named repository from the remote system.
 func Activate(c echo.Context, r *model.Repo, link string) error {
 	return FromContext(c).Activate(r, link)
 }

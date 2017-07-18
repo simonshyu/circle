@@ -15,3 +15,7 @@ type Repo struct {
 	Counter   int    `json:"last_build"               meddler:"repo_counter"`
 	Hash      string `json:"-"                        meddler:"repo_hash"`
 }
+
+/*
+Field Explanation:
+*/

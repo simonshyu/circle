@@ -5,9 +5,10 @@ const (
 )
 
 const (
-	EventPush = "push"
-	EventPull = "pull_request"
-	EventTag  = "tag"
+	EventPush   = "push"
+	EventPull   = "pull_request"
+	EventTag    = "tag"
+	EventManual = "manual"
 	// EventDeploy = "deployment"
 )
 

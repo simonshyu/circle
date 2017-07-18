@@ -156,20 +156,21 @@ func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
 
 // Done implements the rpc.Done function
 func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
-	procID, err := strconv.ParseInt(id, 10, 64)
+	// procID 就是代表某次构建的 init_proc
+	initProcID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
 	}
 
-	proc, err := s.store.ProcLoad(procID)
+	initProc, err := s.store.ProcLoad(initProcID)
 	if err != nil {
-		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		log.Printf("error: cannot find proc with id %d: %s", initProcID, err)
 		return err
 	}
 
-	build, err := s.store.BuildLoad(proc.BuildID)
+	build, err := s.store.BuildLoad(initProc.BuildID)
 	if err != nil {
-		log.Printf("error: cannot find build with id %d: %s", proc.BuildID, err)
+		log.Printf("error: cannot find build with id %d: %s", initProc.BuildID, err)
 		return err
 	}
 
@@ -179,29 +180,33 @@ func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
 	// 	return err
 	// }
 
-	proc.Stopped = state.Finished
-	proc.Error = state.Error
-	proc.ExitCode = state.ExitCode
-	proc.State = model.StatusSuccess
-	if proc.ExitCode != 0 || proc.Error != "" {
-		proc.State = model.StatusFailure
+	initProc.Stopped = state.Finished
+	initProc.Error = state.Error
+	initProc.ExitCode = state.ExitCode
+	initProc.State = model.StatusSuccess
+	if initProc.ExitCode != 0 || initProc.Error != "" {
+		initProc.State = model.StatusFailure
 	}
-	if err := s.store.ProcUpdate(proc); err != nil {
-		log.Printf("error: done: cannot update proc_id %d state: %s", procID, err)
+	if err := s.store.ProcUpdate(initProc); err != nil {
+		log.Printf("error: done: cannot update proc_id %d state: %s", initProcID, err)
 	}
 
 	if err := s.queue.Done(c, id); err != nil {
-		log.Printf("error: done: cannot ack proc_id %d: %s", procID, err)
+		log.Printf("error: done: cannot ack proc_id %d: %s", initProcID, err)
 	}
 
 	// TODO handle this error
 	procs, _ := s.store.ProcList(build)
 	for _, p := range procs {
-		if p.Running() && p.PPID == proc.PID {
+		if p.Running() && p.PPID == initProc.PID {
+			// Why p.PPID == initProc.PID, what's this meaning?
+			// proc 来源于调用 Done() 方法的 initProc
+			// p 来自于遍历 build.procs
+			// 因为 PPID 用于标示 matrix item, PID 用于标示 step
 			p.State = model.StatusSkipped
 			if p.Started != 0 {
 				p.State = model.StatusSuccess // for deamons that are killed
-				p.Stopped = proc.Stopped
+				p.Stopped = initProc.Stopped
 			}
 			if err := s.store.ProcUpdate(p); err != nil {
 				log.Printf("error: done: cannot update proc_id %d child state: %s", p.ID, err)
@@ -223,7 +228,7 @@ func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
 	}
 	if !running {
 		build.Status = status
-		build.Finished = proc.Stopped
+		build.Finished = initProc.Stopped
 		if err := s.store.BuildUpdate(build); err != nil {
 			log.Printf("error: done: cannot update build_id %d final state: %s", build.ID, err)
 		}

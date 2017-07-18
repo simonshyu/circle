@@ -11,7 +11,6 @@ import (
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/utils"
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/pipeline/pipeline/backend"
 	"github.com/SimonXming/pipeline/pipeline/frontend"
@@ -45,20 +44,13 @@ func PostBuild(c echo.Context) error {
 		return err
 	}
 
-	account, err := store.ScmAccountLoad(c, repo.ScmId)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return err
-	}
-	err = utils.SetupRemote(c, account)
+	account, err := store.SetupRemoteWithScmID(c, repo.ScmId)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
-	remote := remote.FromContext(c)
-
-	netrc, err := remote.Netrc(account)
+	netrc, err := remote.Netrc(c, account)
 	if err != nil {
 		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.String(http.StatusNotFound, err.Error())
@@ -68,7 +60,8 @@ func PostBuild(c echo.Context) error {
 	build := new(model.Build)
 	build.RepoID = repoID
 	build.Number = 0
-	build.Event = "pull_request"
+	build.Event = model.EventManual
+	// build.Event = "pull_request"
 	build.Ref = "refs/heads/master"
 	build.Branch = "master"
 	build.Refspec = "refs/heads/master"
@@ -105,18 +98,32 @@ func PostBuild(c echo.Context) error {
 		return err
 	}
 
+	// 如果没有用到 matrix 语法，
+	// len(items) == 1
+
+	// pcounter 代表构建流程的个数
 	var pcounter = len(items)
 	for _, item := range items {
+		// initProc := *(item.Proc)
 		build.Procs = append(build.Procs, item.Proc)
 		item.Proc.BuildID = build.ID
 
 		for _, stage := range item.Config.Stages {
+			// 初始化 gid 的值
 			var gid int
 			for _, step := range stage.Steps {
+				// 每多一个 step，pcounter 就会自增 +1
+				// ** 因此 PID 用于标示 step
 				pcounter++
 				if gid == 0 {
+					// 在每个 stage 的第一个 step 时令 gid = pcounter
+					// ** PGID 用于标示 stage 的值
+					// 第一个 stage 的gid值是 （matrix 个数 +1）
+					// 第二个 stage 的gid值是 （matrix 个数 + 上一个stage的step数 + 1）
+					// 第 n 个 stage 的gid值是 （matrix 个数 + 第 n-1 个stage的step数 + 1）
 					gid = pcounter
 				}
+				// ** PPID 用于标示 matrix item
 				proc := &model.Proc{
 					BuildID: build.ID,
 					Name:    step.Alias,
@@ -137,6 +144,8 @@ func PostBuild(c echo.Context) error {
 
 	c.JSON(http.StatusAccepted, build)
 
+	// 如果没有用到 matrix 语法，
+	// len(items) == 1
 	for _, item := range items {
 		task := new(queue.Task)
 		task.ID = fmt.Sprint(item.Proc.ID)

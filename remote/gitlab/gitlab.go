@@ -30,7 +30,7 @@ func New(opts Opts) (remote.Remote, error) {
 	if err == nil {
 		url.Host = host
 	}
-	fmt.Printf("%v", opts)
+
 	return &Gitlab{
 		URL:          opts.URL,
 		Machine:      url.Host,

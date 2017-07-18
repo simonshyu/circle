@@ -20,3 +20,8 @@ type Build struct {
 	Remote   string  `json:"remote"        meddler:"build_remote"`
 	Procs    []*Proc `json:"procs,omitempty" meddler:"-"`
 }
+
+/*
+Field Explanation:
+Refspec: seems only work when remote.Type == github, bitbucket, gitea
+*/
