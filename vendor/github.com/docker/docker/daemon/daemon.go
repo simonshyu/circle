@@ -42,8 +42,6 @@ import (
 	"github.com/docker/docker/migrate/v1"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/plugingetter"
-	"github.com/docker/docker/pkg/registrar"
-	"github.com/docker/docker/pkg/signal"
 	"github.com/docker/docker/pkg/sysinfo"
 	"github.com/docker/docker/pkg/system"
 	"github.com/docker/docker/pkg/truncindex"
@@ -105,7 +103,6 @@ type Daemon struct {
 	stores                map[string]daemonStore // By container target platform
 	PluginStore           *plugin.Store          // todo: remove
 	pluginManager         *plugin.Manager
-	nameIndex             *registrar.Registrar
 	linkIndex             *linkIndex
 	containerd            libcontainerd.Client
 	containerdRemote      libcontainerd.Remote
@@ -449,8 +446,8 @@ func (daemon *Daemon) parents(c *container.Container) map[string]*container.Cont
 
 func (daemon *Daemon) registerLink(parent, child *container.Container, alias string) error {
 	fullName := path.Join(parent.Name, alias)
-	if err := daemon.nameIndex.Reserve(fullName, child.ID); err != nil {
-		if err == registrar.ErrNameReserved {
+	if err := daemon.containersReplica.ReserveName(fullName, child.ID); err != nil {
+		if err == container.ErrNameReserved {
 			logrus.Warnf("error registering link for %s, to %s, as alias %s, ignoring: %v", parent.ID, child.ID, alias, err)
 			return nil
 		}
@@ -781,7 +778,6 @@ func NewDaemon(config *config.Config, registryService registry.Service, containe
 	d.seccompEnabled = sysInfo.Seccomp
 	d.apparmorEnabled = sysInfo.AppArmor
 
-	d.nameIndex = registrar.NewRegistrar()
 	d.linkIndex = newLinkIndex()
 	d.containerdRemote = containerdRemote
 
@@ -838,42 +834,7 @@ func (daemon *Daemon) waitForStartupDone() {
 
 func (daemon *Daemon) shutdownContainer(c *container.Container) error {
 	stopTimeout := c.StopTimeout()
-	// TODO(windows): Handle docker restart with paused containers
-	if c.IsPaused() {
-		// To terminate a process in freezer cgroup, we should send
-		// SIGTERM to this process then unfreeze it, and the process will
-		// force to terminate immediately.
-		logrus.Debugf("Found container %s is paused, sending SIGTERM before unpausing it", c.ID)
-		sig, ok := signal.SignalMap["TERM"]
-		if !ok {
-			return errors.New("System does not support SIGTERM")
-		}
-		if err := daemon.kill(c, int(sig)); err != nil {
-			return fmt.Errorf("sending SIGTERM to container %s with error: %v", c.ID, err)
-		}
-		if err := daemon.containerUnpause(c); err != nil {
-			return fmt.Errorf("Failed to unpause container %s with error: %v", c.ID, err)
-		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(stopTimeout)*time.Second)
-		defer cancel()
-
-		// Wait with timeout for container to exit.
-		if status := <-c.Wait(ctx, container.WaitConditionNotRunning); status.Err() != nil {
-			logrus.Debugf("container %s failed to exit in %d second of SIGTERM, sending SIGKILL to force", c.ID, stopTimeout)
-			sig, ok := signal.SignalMap["KILL"]
-			if !ok {
-				return errors.New("System does not support SIGKILL")
-			}
-			if err := daemon.kill(c, int(sig)); err != nil {
-				logrus.Errorf("Failed to SIGKILL container %s", c.ID)
-			}
-			// Wait for exit again without a timeout.
-			// Explicitly ignore the result.
-			_ = <-c.Wait(context.Background(), container.WaitConditionNotRunning)
-			return status.Err()
-		}
-	}
 	// If container failed to exit in stopTimeout seconds of SIGTERM, then using the force
 	if err := daemon.containerStop(c, stopTimeout); err != nil {
 		return fmt.Errorf("Failed to stop container %s with error: %v", c.ID, err)
@@ -1242,4 +1203,12 @@ func (daemon *Daemon) checkpointAndSave(container *container.Container) error {
 		return fmt.Errorf("Error saving container state: %v", err)
 	}
 	return nil
+}
+
+// because the CLI sends a -1 when it wants to unset the swappiness value
+// we need to clear it on the server side
+func fixMemorySwappiness(resources *containertypes.Resources) {
+	if resources.MemorySwappiness != nil && *resources.MemorySwappiness == -1 {
+		resources.MemorySwappiness = nil
+	}
 }
