@@ -214,3 +214,14 @@ type Remote interface {
 	* 新增构建类型 manual (意为: 用户手动触发 repo 默认分支 refs/heads/{DEFAULT_BRANCH} 的构建)
 	* fork 一次构建
 	* re-run 一次构建
+
+
+```golang
+// github.com/SimonXming/pipeline/pipeline/frontend/yaml/complier/convert
+
+func (c *Compiler) createProcess(name string, container *yaml.Container) *backend.Step 
+/*
+这个方法里会初始化 backend.Step 里的大部分信息
+*/
+
+```

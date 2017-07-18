@@ -244,9 +244,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		// 定义每一步所需要的环境变量
 		metadata := metadataFromStruct(b.Repo, b.Curr, proc, b.Link)
 		environ := metadata.Environ()
-		for k, v := range metadata.EnvironDrone() {
-			environ[k] = v
-		}
+
 		for k, v := range axis {
 			environ[k] = v
 		}
