@@ -156,10 +156,9 @@ func PostBuild(c echo.Context) error {
 		}
 
 		task.Data, _ = json.Marshal(rpc2.Pipeline{
-			ID:     fmt.Sprint(item.Proc.ID),
-			Config: item.Config,
-			// Timeout: b.Repo.Timeout,
-			Timeout: 60,
+			ID:      fmt.Sprint(item.Proc.ID),
+			Config:  item.Config,
+			Timeout: b.Repo.Timeout,
 		})
 
 		// Config.Services.Logs.Open(context.Background(), task.ID)
@@ -173,8 +172,8 @@ func PostBuild(c echo.Context) error {
 func metadataFromStruct(repo *model.Repo, build *model.Build, proc *model.Proc, link string) frontend.Metadata {
 	return frontend.Metadata{
 		Repo: frontend.Repo{
-			Name: repo.FullName,
-			// Link:    repo.Link,
+			Name:   repo.FullName,
+			Link:   repo.Link,
 			Remote: repo.Clone,
 			// Private: repo.IsPrivate,
 		},
@@ -185,6 +184,7 @@ func metadataFromStruct(repo *model.Repo, build *model.Build, proc *model.Proc, 
 			Finished: build.Finished,
 			Status:   build.Status,
 			Event:    build.Event,
+			Link:     build.Link,
 			Commit: frontend.Commit{
 				Sha:     build.Commit,
 				Ref:     build.Ref,

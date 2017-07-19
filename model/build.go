@@ -13,6 +13,7 @@ type Build struct {
 	Started  int64   `json:"started_at"    meddler:"build_started"`
 	Enqueued int64   `json:"enqueued_at"   meddler:"build_enqueued"`
 	Finished int64   `json:"finished_at"   meddler:"build_finished"`
+	Link     string  `json:"link_url"      meddler:"build_link"`
 	Commit   string  `json:"commit"        meddler:"build_commit"`
 	Branch   string  `json:"branch"        meddler:"build_branch"`
 	Ref      string  `json:"ref"           meddler:"build_ref"`

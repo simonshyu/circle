@@ -68,7 +68,7 @@ func (g *Gitlab) Repo(owner, name string) (*model.Repo, error) {
 	repo.Owner = owner
 	repo.Name = name
 	repo.FullName = repo_.PathWithNamespace
-	// repo.Link = repo_.Url
+	repo.Link = repo_.Url
 	repo.Clone = repo_.HttpRepoUrl
 	repo.Branch = "master"
 
@@ -85,10 +85,10 @@ func (g *Gitlab) Repo(owner, name string) (*model.Repo, error) {
 	return repo, err
 }
 
-func (g *Gitlab) Repos() ([]*model.Repo, error) {
+func (g *Gitlab) Repos() ([]*model.RepoLite, error) {
 	client := NewClient(g.URL, g.PrivateToken, g.SkipVerify)
 
-	var repos = []*model.Repo{}
+	var repos = []*model.RepoLite{}
 
 	all, err := client.AllProjects(g.HideArchives)
 	if err != nil {
@@ -102,11 +102,12 @@ func (g *Gitlab) Repos() ([]*model.Repo, error) {
 		var clone_url = repo.HttpRepoUrl
 		var branch = repo.DefaultBranch
 
-		repos = append(repos, &model.Repo{
-			Owner:  owner,
-			Name:   name,
-			Clone:  clone_url,
-			Branch: branch,
+		repos = append(repos, &model.RepoLite{
+			Owner:    owner,
+			Name:     name,
+			FullName: repo.PathWithNamespace,
+			Clone:    clone_url,
+			Branch:   branch,
 		})
 	}
 

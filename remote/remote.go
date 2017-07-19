@@ -15,7 +15,7 @@ type Remote interface {
 	Repo(owner, repo string) (*model.Repo, error)
 
 	// Repos fetches a list of repos from the remote system.
-	Repos() ([]*model.Repo, error)
+	Repos() ([]*model.RepoLite, error)
 
 	// private repositories from a remote system.
 	Netrc(r *model.ScmAccount) (*model.Netrc, error)
@@ -38,7 +38,7 @@ func Repo(c echo.Context, owner, repo string) (*model.Repo, error) {
 }
 
 // Repo fetches the named repository from the remote system.
-func Repos(c echo.Context) ([]*model.Repo, error) {
+func Repos(c echo.Context) ([]*model.RepoLite, error) {
 	return FromContext(c).Repos()
 }
 

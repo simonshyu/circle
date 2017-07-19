@@ -7,12 +7,17 @@ workspace:
 
 clone:
   git:
-    image: plugins/git
+    image: plugins/git:0.5
     depth: 50
 
 pipeline:
+  test:
+    image: golang:1.7
+    commands:
+      - ls /go/src/github.com/drone/envsubst
+      - go version
   build:
-    image: alpine:3.2
+    image: golang:1.7
     commands:
       - ls /go/src/github.com/drone/envsubst
       - cat ~/.netrc

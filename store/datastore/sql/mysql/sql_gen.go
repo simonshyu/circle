@@ -49,13 +49,16 @@ SELECT
  repo_id
 ,repo_scm_id
 ,repo_clone
+,repo_link
 ,repo_branch
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -67,12 +70,15 @@ SELECT
 ,repo_scm_id
 ,repo_clone
 ,repo_branch
+,repo_link
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -85,12 +91,15 @@ SELECT
 ,repo_scm_id
 ,repo_clone
 ,repo_branch
+,repo_link
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -117,6 +126,7 @@ SELECT
 ,build_created
 ,build_started
 ,build_finished
+,build_link
 ,build_commit
 ,build_branch
 ,build_ref
