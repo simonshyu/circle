@@ -55,6 +55,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
@@ -75,6 +76,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
@@ -96,6 +98,7 @@ SELECT
 ,repo_owner
 ,repo_name
 ,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags

@@ -76,6 +76,8 @@ func (g *Gitlab) Repo(owner, name string) (*model.Repo, error) {
 		repo.Branch = repo_.DefaultBranch
 	}
 
+	repo.IsPrivate = !repo_.Public
+
 	// if g.PrivateMode {
 	// 	repo.IsPrivate = true
 	// } else {

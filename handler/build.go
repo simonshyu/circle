@@ -272,9 +272,10 @@ func (b *builder) Build() ([]*buildItem, error) {
 					b.Netrc.Password,
 					b.Netrc.Machine,
 				),
-				true,
-				// b.Repo.IsPrivate,
+				b.Repo.IsPrivate,
 			),
+			// compiler.WithRegistry(registries...),
+			// compiler.WithSecret(secrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
@@ -284,6 +285,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			),
 			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
+			compiler.WithWorkspaceFromURL("/circle", b.Curr.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 

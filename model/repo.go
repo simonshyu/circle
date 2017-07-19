@@ -19,6 +19,7 @@ type Repo struct {
 	Clone       string `json:"clone_url,omitempty"        meddler:"repo_clone"`
 	Branch      string `json:"default_branch,omitempty"   meddler:"repo_branch"`
 	Timeout     int64  `json:"timeout,omitempty"          meddler:"repo_timeout"`
+	IsPrivate   bool   `json:"private,omitempty"          meddler:"repo_private"`
 	AllowPull   bool   `json:"allow_pr"                   meddler:"repo_allow_pr"`
 	AllowPush   bool   `json:"allow_push"                 meddler:"repo_allow_push"`
 	AllowTag    bool   `json:"allow_tags"                 meddler:"repo_allow_tags"`
@@ -32,9 +33,10 @@ Field Explanation:
 	Link: repo 的关联地址
 	Timeout: repo 代码库拉取的超时时间
 	AllowManual: 允许手动触发构建
+	IsPrivate: 判断是否需要 netrc 文件
 
 暂时不开启字段：
 	Visibility  string `json:"visibility"               meddler:"repo_visibility"`
-	IsPrivate   bool   `json:"private,omitempty"        meddler:"repo_private"`
+
 	IsTrusted   bool   `json:"trusted"                  meddler:"repo_trusted"`
 */

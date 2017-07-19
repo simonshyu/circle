@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS repos (
 ,repo_owner         VARCHAR(250)
 ,repo_name          VARCHAR(250)
 ,repo_timeout       INTEGER
+,repo_private       BOOLEAN
 ,repo_allow_pr      BOOLEAN
 ,repo_allow_push    BOOLEAN
 ,repo_allow_tags    BOOLEAN
