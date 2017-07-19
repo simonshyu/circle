@@ -187,10 +187,6 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		// pipeline.WithTracer(defaultTracer),
 		pipeline.WithEngine(engine),
 	).Run()
-	if err != nil {
-		return err
-	}
-
 	state.Finished = time.Now().Unix()
 	state.Exited = true
 	if err != nil {
