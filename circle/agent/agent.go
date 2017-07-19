@@ -121,22 +121,18 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 	// 	println(e)
 	// }
 
-	engine, err := docker.NewEnv()
+	// get the next job from the queue
+	work, err := client.Next(ctx, filter)
 	if err != nil {
 		return err
 	}
-
-	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
-		part, err := rc.NextPart()
-		if err != nil {
-			return err
-		}
-		io.Copy(os.Stderr, part)
+	if work == nil {
 		return nil
-	})
+	}
+	log.Printf("pipeline: received next execution: %s", work.ID)
 
-	log.Printf("Trying get a work ...")
-	work, err := client.Next(ctx, filter)
+	// new docker engine
+	engine, err := docker.NewEnv()
 	if err != nil {
 		return err
 	}
@@ -180,7 +176,15 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
 	}
 
-	log.Printf("Success get a work.")
+	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, err := rc.NextPart()
+		if err != nil {
+			return err
+		}
+		io.Copy(os.Stderr, part)
+		return nil
+	})
+
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
