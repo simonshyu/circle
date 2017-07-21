@@ -36,6 +36,7 @@ func server(c *cli.Context) error {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(cimiddleware.StoreWithConfig(s))
+	e.Use(cimiddleware.CircleContext())
 	router.Load(e)
 	e.Logger.Fatal(e.Start("0.0.0.0:8000"))
 	return nil

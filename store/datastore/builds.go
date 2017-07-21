@@ -38,6 +38,13 @@ func (db *datastore) BuildLoad(id int64) (*model.Build, error) {
 	return build, err
 }
 
+func (db *datastore) GetBuildNumber(repo *model.Repo, num int) (*model.Build, error) {
+	stmt := sql.Lookup(db.driver, "build-find-number")
+	build := new(model.Build)
+	err := meddler.QueryRow(db, build, stmt, repo.ID, num)
+	return build, err
+}
+
 func (db *datastore) incrementRepoRetry(id int64) (int, error) {
 	repo, err := db.RepoLoad(id)
 	if err != nil {

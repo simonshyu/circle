@@ -13,6 +13,12 @@ const (
 )
 
 const (
+	BuildManual = "manual"
+	BuildFork   = "fork"
+	BuildRerun  = "rerun"
+)
+
+const (
 	StatusSkipped  = "skipped"
 	StatusPending  = "pending"
 	StatusRunning  = "running"

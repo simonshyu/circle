@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"math/rand"
@@ -26,6 +27,12 @@ import (
 )
 
 func PostBuild(c echo.Context) error {
+	cc, ok := c.(*CircleContext)
+	if !ok {
+		c.String(http.StatusBadRequest, "Context 转换失败.")
+		return errors.New("Context 转换失败.")
+	}
+	_type := cc.DefaultQueryParam("type", model.BuildManual)
 	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
 	if err != nil {
 		c.Error(err)
@@ -57,24 +64,81 @@ func PostBuild(c echo.Context) error {
 		return err
 	}
 
-	build := new(model.Build)
-	build.RepoID = repoID
-	build.Number = 0
-	build.Event = model.EventManual
-	// build.Event = "pull_request"
-	build.Ref = "refs/heads/master"
-	build.Branch = "master"
-	build.Refspec = "refs/heads/master"
-	// build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
-	build.Status = model.StatusPending
-	build.Started = 0
-	build.Finished = 0
-	build.Enqueued = time.Now().UTC().Unix()
-	build.Error = ""
-	err = store.BuildCreate(c, build)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return err
+	var build *model.Build
+
+	if _type == model.BuildManual {
+		build = new(model.Build)
+		build.RepoID = repoID
+		build.Number = 0
+		build.Event = model.EventManual
+		// build.Event = "pull_request"
+		build.Ref = "refs/heads/master"
+		build.Branch = "master"
+		build.Refspec = "refs/heads/master"
+		// build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.BuildCreate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+	} else if _type == model.BuildFork {
+		num, err := strconv.Atoi(c.QueryParam("number"))
+		if err != nil {
+			c.Error(err)
+			return err
+		}
+		build, err = store.GetBuildNumber(c, repo, num)
+		if err != nil {
+			logrus.Errorf("failure to get build %d. %s", num, err)
+			c.String(http.StatusNotFound, err.Error())
+			return err
+		}
+		build.ID = 0
+		build.Number = 0
+		// build.Event: using the same event
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.BuildCreate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+	} else if _type == model.BuildRerun {
+		num, err := strconv.Atoi(c.QueryParam("number"))
+		if err != nil {
+			c.Error(err)
+			return err
+		}
+		build, err = store.GetBuildNumber(c, repo, num)
+		if err != nil {
+			logrus.Errorf("failure to get build %d. %s", num, err)
+			c.String(http.StatusNotFound, err.Error())
+			return err
+		}
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.ProcClear(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+
+		err = store.BuildUpdate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
 	}
 
 	envs := map[string]string{}
