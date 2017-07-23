@@ -4,12 +4,13 @@ import (
 	"context"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
 	// "github.com/SimonXming/pipeline/pipeline/rpc"
-	rpc "github.com/SimonXming/pipeline/pipeline/rpc"
+	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
 	"math"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -172,10 +173,43 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		return nil
 	})
 
+	defaultTracer := pipeline.TraceFunc(func(state *pipeline.State) error {
+		procState := rpc.State{
+			Proc:     state.Pipeline.Step.Alias,
+			Exited:   state.Process.Exited,
+			ExitCode: state.Process.ExitCode,
+			Started:  time.Now().Unix(), // TODO do not do this
+			Finished: time.Now().Unix(),
+		}
+		defer func() {
+			if uerr := client.Update(context.Background(), work.ID, procState); uerr != nil {
+				log.Printf("Pipeine: error updating pipeline step status: %s: %s: %s", work.ID, procState.Proc, uerr)
+			}
+		}()
+		if state.Process.Exited {
+			return nil
+		}
+		if state.Pipeline.Step.Environment == nil {
+			state.Pipeline.Step.Environment = map[string]string{}
+		}
+		state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "success"
+		state.Pipeline.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "success"
+		state.Pipeline.Step.Environment["CI_JOB_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["CI_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+
+		if state.Pipeline.Error != nil {
+			state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "failure"
+			state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "failure"
+		}
+		return nil
+	})
+
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
-		// pipeline.WithTracer(defaultTracer),
+		pipeline.WithTracer(defaultTracer),
 		pipeline.WithEngine(engine),
 	).Run()
 	state.Finished = time.Now().Unix()

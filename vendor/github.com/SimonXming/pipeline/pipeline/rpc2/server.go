@@ -59,6 +59,8 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 		return s.done(ctx, req)
 	case methodExtend:
 		return s.extend(ctx, req)
+	case methodUpdate:
+		return s.update(req)
 	default:
 		return nil, errNoSuchMethod
 	}
@@ -114,4 +116,14 @@ func (s *Server) extend(ctx context.Context, req *jsonrpc2.Request) (interface{}
 		return nil, err
 	}
 	return nil, s.peer.Extend(ctx, id)
+}
+
+// update unmarshals the rpc request parameters and invokes the peer.Update
+// procedure. The results are retuned and written to the rpc response.
+func (s *Server) update(req *jsonrpc2.Request) (interface{}, error) {
+	in := new(updateReq)
+	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {
+		return nil, err
+	}
+	return nil, s.peer.Update(noContext, in.ID, in.State)
 }

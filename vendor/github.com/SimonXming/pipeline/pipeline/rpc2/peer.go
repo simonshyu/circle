@@ -44,4 +44,7 @@ type Peer interface {
 
 	// Extend extends the pipeline deadline
 	Extend(c context.Context, id string) error
+
+	// Update updates the pipeline state.
+	Update(c context.Context, id string, state State) error
 }

@@ -19,7 +19,6 @@ type Store interface {
 
 	RepoCreate(*model.Repo) error
 	RepoLoad(int64) (*model.Repo, error)
-
 	// GetRepoName gets a repo by its full name.
 	RepoList() ([]*model.Repo, error)
 	RepoFind(*model.ScmAccount) ([]*model.Repo, error)
@@ -36,6 +35,7 @@ type Store interface {
 	ProcCreate([]*model.Proc) error
 	ProcList(*model.Build) ([]*model.Proc, error)
 	ProcLoad(int64) (*model.Proc, error)
+	ProcChild(*model.Build, int, string) (*model.Proc, error)
 	ProcUpdate(*model.Proc) error
 	ProcClear(*model.Build) error
 
@@ -118,6 +118,10 @@ func ProcList(c echo.Context, build *model.Build) ([]*model.Proc, error) {
 
 func ProcLoad(c echo.Context, id int64) (*model.Proc, error) {
 	return FromContext(c).ProcLoad(id)
+}
+
+func ProcChild(c echo.Context, build *model.Build, pid int, child string) (*model.Proc, error) {
+	return FromContext(c).ProcChild(build, pid, child)
 }
 
 func ProcUpdate(c echo.Context, proc *model.Proc) error {

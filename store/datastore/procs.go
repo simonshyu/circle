@@ -31,13 +31,20 @@ func (db *datastore) ProcLoad(id int64) (*model.Proc, error) {
 	return proc, err
 }
 
+func (db *datastore) ProcChild(build *model.Build, pid int, child string) (*model.Proc, error) {
+	stmt := sql.Lookup(db.driver, "proc-find-build-ppid")
+	proc := new(model.Proc)
+	err := meddler.QueryRow(db, proc, stmt, build.ID, pid, child)
+	return proc, err
+}
+
 func (db *datastore) ProcUpdate(proc *model.Proc) error {
 	return meddler.Update(db, procsTable, proc)
 }
 
 func (db *datastore) ProcClear(build *model.Build) error {
 	//stmt1 := sql.Lookup(db.driver, "files-delete-build")
-	stmt := sql.Lookup(db.driver, "procs-delete-build")
+	stmt := sql.Lookup(db.driver, "proc-delete-build")
 	_, err := db.Exec(stmt, build.ID)
 	return err
 }

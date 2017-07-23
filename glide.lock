@@ -1,5 +1,5 @@
 hash: 6f0dcddbfe8e1986211e2efdbed50ae3cfe8fef3addcf8687e3d8cb5fefa3278
-updated: 2017-07-23T11:42:36.886605067+08:00
+updated: 2017-07-23T17:54:19.37446867+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -94,7 +94,7 @@ imports:
 - name: github.com/russross/meddler
   version: 9515f6b01c158e6a98939d1ddfddb8a05544e08d
 - name: github.com/SimonXming/pipeline
-  version: 05e9d2ce3aa617e898cd82c60a2a0ce7196ae353
+  version: 24428275f2665d5a4ee0d124f86bc94d6972f794
   subpackages:
   - pipeline
   - pipeline/backend
@@ -106,7 +106,6 @@ imports:
   - pipeline/frontend/yaml/types
   - pipeline/interrupt
   - pipeline/multipart
-  - pipeline/rpc
   - pipeline/rpc2
 - name: github.com/SimonXming/queue
   version: 63b1974bbcc9b4b251ed18f88edc3a643eb64ff7

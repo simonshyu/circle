@@ -263,3 +263,68 @@ func (s *RPC) Wait(c context.Context, id string) error {
 func (s *RPC) Extend(c context.Context, id string) error {
 	return s.queue.Extend(c, id)
 }
+
+// Update implements the rpc.Update function
+func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
+	procID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	pproc, err := s.store.ProcLoad(procID)
+	if err != nil {
+		log.Printf("error: cannot find proc with id %d: %s", procID, err)
+		return err
+	}
+
+	build, err := s.store.BuildLoad(pproc.BuildID)
+	if err != nil {
+		log.Printf("error: cannot find build with id %d: %s", pproc.BuildID, err)
+		return err
+	}
+
+	proc, err := s.store.ProcChild(build, pproc.PID, state.Proc)
+	if err != nil {
+		log.Printf("error: cannot find proc with name %s: %s", state.Proc, err)
+		return err
+	}
+
+	_, err = s.store.RepoLoad(build.RepoID)
+	if err != nil {
+		log.Printf("error: cannot find repo with id %d: %s", build.RepoID, err)
+		return err
+	}
+
+	if state.Exited {
+		proc.Stopped = state.Finished
+		proc.ExitCode = state.ExitCode
+		proc.Error = state.Error
+		proc.State = model.StatusSuccess
+		if state.ExitCode != 0 || state.Error != "" {
+			proc.State = model.StatusFailure
+		}
+	} else {
+		proc.Started = state.Started
+		proc.State = model.StatusRunning
+	}
+
+	if err := s.store.ProcUpdate(proc); err != nil {
+		log.Printf("error: rpc.update: cannot update proc: %s", err)
+	}
+
+	// build.Procs, _ = s.store.ProcList(build)
+	// build.Procs = model.Tree(build.Procs)
+	// message := pubsub.Message{
+	// 	Labels: map[string]string{
+	// 		"repo":    repo.FullName,
+	// 		"private": strconv.FormatBool(repo.IsPrivate),
+	// 	},
+	// }
+	// message.Data, _ = json.Marshal(model.Event{
+	// 	Repo:  *repo,
+	// 	Build: *build,
+	// })
+	// s.pubsub.Publish(c, "topic/events", message)
+
+	return nil
+}

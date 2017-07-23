@@ -6,21 +6,22 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"scm-account-list":    scmAccountList,
-	"scm-account-find-id": scmAccountFindId,
-	"repo-list":           repoList,
-	"repo-find-id":        repoFindId,
-	"repo-find-scm-id":    repoFindScmId,
-	"repo-update-counter": repoUpdateCounter,
-	"build-find-id":       buildFindId,
-	"build-find-number":   buildFindNumber,
-	"config-find-id":      configFindId,
-	"config-find-repo":    configFindRepo,
-	"proc-find-build":     procsFindBuild,
-	"proc-find-id":        procFindId,
-	"procs-delete-build":  procsDeleteBuild,
-	"task-list":           taskList,
-	"task-delete":         taskDelete,
+	"scm-account-list":     scmAccountList,
+	"scm-account-find-id":  scmAccountFindId,
+	"repo-list":            repoList,
+	"repo-find-id":         repoFindId,
+	"repo-find-scm-id":     repoFindScmId,
+	"repo-update-counter":  repoUpdateCounter,
+	"build-find-id":        buildFindId,
+	"build-find-number":    buildFindNumber,
+	"config-find-id":       configFindId,
+	"config-find-repo":     configFindRepo,
+	"proc-find-build":      procsFindBuild,
+	"proc-find-id":         procFindId,
+	"proc-find-build-ppid": procFindBuildPpid,
+	"proc-delete-build":    procDeleteBuild,
+	"task-list":            taskList,
+	"task-delete":          taskDelete,
 }
 
 var scmAccountList = `
@@ -226,7 +227,27 @@ FROM procs
 WHERE proc_id = ?
 `
 
-var procsDeleteBuild = `
+var procFindBuildPpid = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+  AND proc_ppid = ?
+  AND proc_name = ?`
+
+var procDeleteBuild = `
 DELETE FROM procs WHERE proc_build_id = ?
 `
 

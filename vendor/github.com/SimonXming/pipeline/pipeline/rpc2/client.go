@@ -98,6 +98,12 @@ func (t *Client) Extend(c context.Context, id string) error {
 	return t.call(c, methodExtend, id, nil)
 }
 
+// Update updates the pipeline state.
+func (t *Client) Update(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodUpdate, &params, nil)
+}
+
 // Close closes the client connection.
 func (t *Client) Close() error {
 	t.Lock()
