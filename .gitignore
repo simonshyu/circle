@@ -14,3 +14,5 @@
 .glide/
 
 test/*.json
+
+test/gitlab/
