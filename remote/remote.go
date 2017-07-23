@@ -51,3 +51,9 @@ func Netrc(c echo.Context, account *model.ScmAccount) (*model.Netrc, error) {
 func Activate(c echo.Context, r *model.Repo, link string) error {
 	return FromContext(c).Activate(r, link)
 }
+
+// Hook parses the post-commit hook from the Request body
+// and returns the required data in a standard format.
+func Hook(c echo.Context, r *http.Request) (*model.Repo, *model.Build, error) {
+	return FromContext(c).Hook(r)
+}

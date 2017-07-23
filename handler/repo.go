@@ -111,9 +111,10 @@ func PostRepo(c echo.Context) error {
 	}
 
 	link := fmt.Sprintf(
-		"%s/hook?access_token=%s",
+		"%s/hook?access_token=%s&scm_id=%d",
 		httputil.GetURL(c.Request()),
 		sig,
+		scmId,
 	)
 
 	// activate the repository before we make any

@@ -17,3 +17,5 @@ import:
 - package: github.com/SimonXming/queue
 - package: github.com/SimonXming/pipeline
   version: ^1.0.0-alpha
+- package: github.com/franela/goblin
+  version: ^0.0.1
