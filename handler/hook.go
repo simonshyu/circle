@@ -12,7 +12,7 @@ import (
 	"github.com/SimonXming/circle/store"
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/circle/utils/token"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/SimonXming/queue"
 
 	"github.com/labstack/echo"
@@ -190,7 +190,7 @@ func PostHook(c echo.Context) error {
 			task.Labels[k] = v
 		}
 
-		task.Data, _ = json.Marshal(rpc2.Pipeline{
+		task.Data, _ = json.Marshal(rpc.Pipeline{
 			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,

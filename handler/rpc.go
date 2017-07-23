@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/SimonXming/queue"
 	"github.com/labstack/echo"
 	"log"
@@ -55,13 +55,13 @@ func RPCHandler(c echo.Context) error {
 		store: store.FromContext(c),
 		queue: Config.Services.Queue,
 	}
-	server := rpc2.NewServer(&peer)
+	server := rpc.NewServer(&peer)
 	server.ServeHTTP(c.Response().Writer, c.Request())
 	return nil
 }
 
 // Next implements the rpc.Next function
-func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error) {
+func (s *RPC) Next(c context.Context, filter rpc.Filter) (*rpc.Pipeline, error) {
 	fn := func(task *queue.Task) bool {
 		for k, v := range filter.Labels {
 			if task.Labels[k] != v {
@@ -77,7 +77,7 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 	} else if task == nil {
 		return nil, nil
 	}
-	pipeline := new(rpc2.Pipeline)
+	pipeline := new(rpc.Pipeline)
 
 	// check if the process was previously cancelled
 	// cancelled, _ := s.checkCancelled(pipeline)
@@ -101,7 +101,7 @@ func (s *RPC) Next(c context.Context, filter rpc2.Filter) (*rpc2.Pipeline, error
 
 // Init implements the rpc.Init function
 // Init Build and Proc status and create_time
-func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
+func (s *RPC) Init(c context.Context, id string, state rpc.State) error {
 	procID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (s *RPC) Init(c context.Context, id string, state rpc2.State) error {
 }
 
 // Done implements the rpc.Done function
-func (s *RPC) Done(c context.Context, id string, state rpc2.State) error {
+func (s *RPC) Done(c context.Context, id string, state rpc.State) error {
 	// procID 就是代表某次构建的 init_proc
 	initProcID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {

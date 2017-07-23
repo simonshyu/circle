@@ -18,7 +18,7 @@ import (
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/matrix"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/SimonXming/queue"
 
 	"github.com/labstack/echo"
@@ -217,7 +217,7 @@ func PostBuild(c echo.Context) error {
 			task.Labels[k] = v
 		}
 
-		task.Data, _ = json.Marshal(rpc2.Pipeline{
+		task.Data, _ = json.Marshal(rpc.Pipeline{
 			ID:      fmt.Sprint(item.Proc.ID),
 			Config:  item.Config,
 			Timeout: b.Repo.Timeout,

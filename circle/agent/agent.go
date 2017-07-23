@@ -3,8 +3,8 @@ package agent
 import (
 	"context"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
-	"github.com/SimonXming/pipeline/pipeline/rpc"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	// "github.com/SimonXming/pipeline/pipeline/rpc"
+	rpc "github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
@@ -15,15 +15,9 @@ import (
 )
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/SimonXming/pipeline/pipeline"
 	"github.com/SimonXming/pipeline/pipeline/backend"
 	"github.com/SimonXming/pipeline/pipeline/backend/docker"
-	"github.com/SimonXming/pipeline/pipeline/frontend"
-	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
-	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/multipart"
 	"io"
 	"os"
@@ -50,17 +44,17 @@ func loop(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	filter := rpc2.Filter{
+	filter := rpc.Filter{
 		Labels: map[string]string{
 			"platform": "linux/amd64",
 		},
 	}
-	client, err := rpc2.NewClient(
+	client, err := rpc.NewClient(
 		endpoint.String(),
-		rpc2.WithRetryLimit(
+		rpc.WithRetryLimit(
 			retryLimit,
 		),
-		rpc2.WithBackoff(
+		rpc.WithBackoff(
 			time.Second*15,
 		),
 	)
@@ -111,15 +105,8 @@ run 方法是 agent 的主要运行逻辑
 9. 通过 connection 同步 pipelone 状态
 */
 
-func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
-
-	// path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
-
-	// e := testRunPipeline(ctx, client, path)
-	// if e != nil {
-	// 	println(e)
-	// }
 
 	// get the next job from the queue
 	work, err := client.Next(ctx, filter)
@@ -169,7 +156,7 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		}
 	}()
 
-	state := rpc2.State{}
+	state := rpc.State{}
 	state.Started = time.Now().Unix()
 	err = client.Init(context.Background(), work.ID, state)
 	if err != nil {
@@ -214,124 +201,4 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 	}
 
 	return nil
-}
-
-func testRunPipeline(ctx context.Context, client rpc.Peer, filePath string) error {
-	conf, err := yaml.ParseFile(filePath)
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("%v", conf)
-	compiled := compiler.New(
-		compiler.WithPrefix(
-			"test",
-		),
-		compiler.WithLocal(
-			false,
-		),
-		compiler.WithMetadata(
-			metadataFromContext(),
-		),
-		compiler.WithNetrc(
-			"simon_xu@outlook.com",
-			"@git5508177QaZ",
-			"github.com",
-		),
-	).Compile(conf)
-
-	err = outputJson(compiled)
-	if err != nil {
-		return err
-	}
-
-	engine, err := docker.NewEnv()
-	if err != nil {
-		return err
-	}
-
-	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
-		part, err := rc.NextPart()
-		if err != nil {
-			return err
-		}
-		io.Copy(os.Stderr, part)
-		return nil
-	})
-
-	err = pipeline.New(compiled,
-		pipeline.WithContext(ctx),
-		pipeline.WithLogger(defaultLogger),
-		// pipeline.WithTracer(defaultTracer),
-		pipeline.WithEngine(engine),
-	).Run()
-
-	if err != nil {
-		fmt.Printf("%v", err)
-	}
-	return nil
-}
-
-func outputJson(compiled *backend.Config) error {
-	if false {
-		for _, stage := range compiled.Stages {
-			for _, step := range stage.Steps {
-				fmt.Printf("%v", step)
-			}
-		}
-	}
-	// marshal the compiled spec to formatted yaml
-	out, err := json.MarshalIndent(compiled, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	// create output file with option to dump to stdout
-	var writer = os.Stdout
-	output := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.json"
-	if output != "-" {
-		writer, err = os.Create(output)
-		if err != nil {
-			return err
-		}
-	}
-	defer writer.Close()
-
-	_, err = writer.Write(out)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func metadataFromContext() frontend.Metadata {
-	return frontend.Metadata{
-		Repo: frontend.Repo{
-			Name:    "go-practice",
-			Link:    "https://github.com/SimonXming/go-practice.git",
-			Remote:  "https://github.com/SimonXming/go-practice.git",
-			Private: false,
-		},
-		Curr: frontend.Build{
-			Number:   1,
-			Created:  0,
-			Started:  0,
-			Finished: 0,
-			Status:   "start",
-			Event:    "",
-			Link:     "",
-			Target:   "",
-			Commit: frontend.Commit{
-				Sha:     "50616752e10380848631c7c5bbabc87adb096d12",
-				Ref:     "refs/heads/master",
-				Refspec: "refs/heads/master",
-				Branch:  "master",
-				Message: "",
-				Author: frontend.Author{
-					Name:   "",
-					Email:  "",
-					Avatar: "",
-				},
-			},
-		},
-	}
 }
