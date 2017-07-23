@@ -16,6 +16,6 @@ data2 = {
     "private_token": "sWxpWA4Lxtz8KGixW2uy"
 }
 
-r = requests.post("http://localhost:8000/scm", json=data)
+r = requests.post("http://192.168.1.141:8000/scm", json=data)
 
 print(r.content)
