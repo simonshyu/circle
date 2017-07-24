@@ -6,22 +6,24 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"scm-account-list":     scmAccountList,
-	"scm-account-find-id":  scmAccountFindId,
-	"repo-list":            repoList,
-	"repo-find-id":         repoFindId,
-	"repo-find-scm-id":     repoFindScmId,
-	"repo-update-counter":  repoUpdateCounter,
-	"build-find-id":        buildFindId,
-	"build-find-number":    buildFindNumber,
-	"config-find-id":       configFindId,
-	"config-find-repo":     configFindRepo,
-	"proc-find-build":      procsFindBuild,
-	"proc-find-id":         procFindId,
-	"proc-find-build-ppid": procFindBuildPpid,
-	"proc-delete-build":    procDeleteBuild,
-	"task-list":            taskList,
-	"task-delete":          taskDelete,
+	"scm-account-list":          scmAccountList,
+	"scm-account-find-id":       scmAccountFindId,
+	"repo-list":                 repoList,
+	"repo-find-id":              repoFindId,
+	"repo-find-scm-id":          repoFindScmId,
+	"repo-find-scm-id-fullname": repoFindScmIdFullname,
+	"repo-update-counter":       repoUpdateCounter,
+	"build-find-id":             buildFindId,
+	"build-find-number":         buildFindNumber,
+	"config-find-id":            configFindId,
+	"config-find-repo":          configFindRepo,
+	"proc-find-build":           procsFindBuild,
+	"proc-find-id":              procFindId,
+	"proc-find-build-ppid":      procFindBuildPpid,
+	"proc-delete-build":         procDeleteBuild,
+	"task-list":                 taskList,
+	"task-delete":               taskDelete,
+	"log-find-job-id":           logFindProc,
 }
 
 var scmAccountList = `
@@ -111,6 +113,30 @@ SELECT
 FROM repos
 WHERE repo_scm_id = ?
 ORDER BY repo_id ASC
+`
+
+var repoFindScmIdFullname = `
+SELECT
+ repo_id
+,repo_scm_id
+,repo_clone
+,repo_branch
+,repo_link
+,repo_full_name
+,repo_owner
+,repo_name
+,repo_timeout
+,repo_private
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_tags
+,repo_allow_manual
+,repo_counter
+,repo_hash
+FROM repos
+WHERE repo_scm_id    = ?
+  AND repo_full_name = ?
+LIMIT 1;
 `
 
 var repoUpdateCounter = `
@@ -245,7 +271,8 @@ SELECT
 FROM procs
 WHERE proc_build_id = ?
   AND proc_ppid = ?
-  AND proc_name = ?`
+  AND proc_name = ?
+`
 
 var procDeleteBuild = `
 DELETE FROM procs WHERE proc_build_id = ?
@@ -261,4 +288,14 @@ FROM tasks
 
 var taskDelete = `
 DELETE FROM tasks WHERE task_id = ?
+`
+
+var logFindProc = `
+SELECT
+ log_id
+,log_job_id
+,log_data
+FROM logs
+WHERE log_job_id = ?
+LIMIT 1
 `

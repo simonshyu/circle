@@ -1,7 +1,7 @@
 package store
 
 import (
-	// "io"
+	"io"
 
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/utils"
@@ -22,7 +22,6 @@ type Store interface {
 	// GetRepoName gets a repo by its full name.
 	RepoList() ([]*model.Repo, error)
 	RepoFind(*model.ScmAccount) ([]*model.Repo, error)
-	GetRepoName(string) (*model.Repo, error)
 	GetRepoScmName(int64, string) (*model.Repo, error)
 
 	SecretCreate(*model.Secret) error
@@ -42,6 +41,8 @@ type Store interface {
 	TaskList() ([]*model.Task, error)
 	TaskInsert(*model.Task) error
 	TaskDelete(string) error
+
+	LogFind(*model.Proc) (io.ReadCloser, error)
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {
@@ -78,10 +79,6 @@ func RepoFind(c echo.Context, scm *model.ScmAccount) ([]*model.Repo, error) {
 
 func RepoLoad(c echo.Context, id int64) (*model.Repo, error) {
 	return FromContext(c).RepoLoad(id)
-}
-
-func GetRepoOwnerName(c echo.Context, owner, name string) (*model.Repo, error) {
-	return FromContext(c).GetRepoName(owner + "/" + name)
 }
 
 func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*model.Repo, error) {
@@ -130,6 +127,10 @@ func ProcUpdate(c echo.Context, proc *model.Proc) error {
 
 func ProcClear(c echo.Context, build *model.Build) error {
 	return FromContext(c).ProcClear(build)
+}
+
+func LogFind(c echo.Context, proc *model.Proc) (io.ReadCloser, error) {
+	return FromContext(c).LogFind(proc)
 }
 
 // helper: 合并 ScmAccountLoad 和 SetupRemote 的功能

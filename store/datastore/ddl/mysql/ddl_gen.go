@@ -48,6 +48,10 @@ var migrations = []struct {
 		name: "create-table-tasks",
 		stmt: createTableTasks,
 	},
+	{
+		name: "create-table-logs",
+		stmt: createTableLogs,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -270,5 +274,19 @@ CREATE TABLE IF NOT EXISTS tasks (
  task_id     VARCHAR(250) PRIMARY KEY
 ,task_data   MEDIUMBLOB
 ,task_labels MEDIUMBLOB
+);
+`
+
+//
+// 08_create_table_logs.sql
+//
+
+var createTableLogs = `
+CREATE TABLE IF NOT EXISTS logs (
+ log_id     INTEGER PRIMARY KEY AUTO_INCREMENT
+,log_job_id INTEGER
+,log_data   MEDIUMBLOB
+
+,UNIQUE(log_job_id)
 );
 `

@@ -48,7 +48,7 @@ func PostHook(c echo.Context) error {
 		c.String(http.StatusBadRequest, "failure to ascertain repo from hook.")
 		return err
 	}
-	repo, err := store.GetRepoOwnerName(c, tmprepo.Owner, tmprepo.Name)
+	repo, err := store.GetRepoScmIDOwnerName(c, scmId, tmprepo.Owner, tmprepo.Name)
 	if err != nil {
 		logrus.Errorf("failure to find repo %s/%s from hook. %s", tmprepo.Owner, tmprepo.Name, err)
 		c.String(http.StatusNotFound, "failure to ascertain repo from hook.")
