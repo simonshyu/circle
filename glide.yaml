@@ -19,3 +19,4 @@ import:
   version: ^1.0.0-alpha
 - package: github.com/franela/goblin
   version: ^0.0.1
+- package: github.com/SimonXming/logging

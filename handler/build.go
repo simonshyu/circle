@@ -18,7 +18,7 @@ import (
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/matrix"
-	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
+	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/SimonXming/queue"
 
 	"github.com/labstack/echo"

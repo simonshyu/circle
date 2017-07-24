@@ -2,9 +2,9 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
-	// "github.com/SimonXming/pipeline/pipeline/rpc"
-	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
+	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
@@ -164,11 +164,47 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
 	}
 
+	localLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, err := rc.NextPart()
+		if err != nil {
+			return err
+		}
+		io.Copy(os.Stderr, part)
+		return nil
+	})
+
+	var uploads sync.WaitGroup
 	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
 		part, err := rc.NextPart()
 		if err != nil {
 			return err
 		}
+
+		uploads.Add(1)
+
+		limitedPart := io.LimitReader(part, maxLogsUpload)
+		logstream := rpc.NewLineWriter(client, work.ID, proc.Alias)
+		io.Copy(logstream, limitedPart)
+
+		file := &rpc.File{}
+		file.Mime = "application/json+logs"
+		file.Proc = proc.Alias
+		file.Name = "logs.json"
+		file.Data, _ = json.Marshal(logstream.Lines())
+		file.Size = len(file.Data)
+		file.Time = time.Now().Unix()
+
+		if serr := client.Upload(context.Background(), work.ID, file); serr != nil {
+			log.Printf("pipeline: cannot upload logs: %s: %s: %s", work.ID, file.Mime, serr)
+		} else {
+			log.Printf("pipeline: finish uploading logs: %s: step %s: %s", file.Mime, work.ID, proc.Alias)
+		}
+
+		defer func() {
+			log.Printf("pipeline: finish uploading logs: %s: step %s", work.ID, proc.Alias)
+			uploads.Done()
+		}()
+
 		io.Copy(os.Stderr, part)
 		return nil
 	})
@@ -209,6 +245,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
+		pipeline.WithLogger(localLogger),
 		pipeline.WithTracer(defaultTracer),
 		pipeline.WithEngine(engine),
 	).Run()

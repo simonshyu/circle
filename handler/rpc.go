@@ -8,7 +8,8 @@ import (
 	"encoding/json"
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/store"
-	rpc "github.com/SimonXming/pipeline/pipeline/rpc2"
+	"github.com/SimonXming/logging"
+	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/SimonXming/queue"
 	"github.com/labstack/echo"
 	"log"
@@ -23,7 +24,7 @@ var Config = struct {
 	Services struct {
 		// Pubsub     pubsub.Publisher
 		Queue queue.Queue
-		// Logs       logging.Log
+		Logs  logging.Log
 		// Senders    model.SenderService
 		// Secrets    model.SecretService
 		// Registries model.RegistryService
@@ -47,14 +48,16 @@ var Config = struct {
 }{}
 
 type RPC struct {
-	queue queue.Queue
-	store store.Store
+	queue  queue.Queue
+	store  store.Store
+	logger logging.Log
 }
 
 func RPCHandler(c echo.Context) error {
 	peer := RPC{
-		store: store.FromContext(c),
-		queue: Config.Services.Queue,
+		store:  store.FromContext(c),
+		queue:  Config.Services.Queue,
+		logger: Config.Services.Logs,
 	}
 	server := rpc.NewServer(&peer)
 	server.ServeHTTP(c.Response().Writer, c.Request())
@@ -372,5 +375,13 @@ func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
 	// },
 	// 	bytes.NewBuffer(file.Data),
 	// )
+	return nil
+}
+
+// Log implements the rpc.Log function
+func (s *RPC) Log(c context.Context, id string, line *rpc.Line) error {
+	entry := new(logging.Entry)
+	entry.Data, _ = json.Marshal(line)
+	s.logger.Write(c, id, entry)
 	return nil
 }
