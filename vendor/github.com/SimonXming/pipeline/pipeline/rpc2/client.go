@@ -31,6 +31,10 @@ const (
 )
 
 type (
+	uploadReq struct {
+		ID   string `json:"id"`
+		File *File  `json:"file"`
+	}
 	updateReq struct {
 		ID    string `json:"id"`
 		State State  `json:"state"`
@@ -102,6 +106,12 @@ func (t *Client) Extend(c context.Context, id string) error {
 func (t *Client) Update(c context.Context, id string, state State) error {
 	params := updateReq{id, state}
 	return t.call(c, methodUpdate, &params, nil)
+}
+
+// Upload uploads the pipeline artifact.
+func (t *Client) Upload(c context.Context, id string, file *File) error {
+	params := uploadReq{id, file}
+	return t.call(c, methodUpload, params, nil)
 }
 
 // Close closes the client connection.

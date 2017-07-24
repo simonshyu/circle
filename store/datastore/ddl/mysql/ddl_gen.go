@@ -52,6 +52,18 @@ var migrations = []struct {
 		name: "create-table-logs",
 		stmt: createTableLogs,
 	},
+	{
+		name: "create-table-files",
+		stmt: createTableFiles,
+	},
+	{
+		name: "create-index-files-builds",
+		stmt: createIndexFilesBuilds,
+	},
+	{
+		name: "create-index-files-procs",
+		stmt: createIndexFilesProcs,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -289,4 +301,30 @@ CREATE TABLE IF NOT EXISTS logs (
 
 ,UNIQUE(log_job_id)
 );
+`
+
+//
+// 09_create_table_files.sql
+//
+var createTableFiles = `
+CREATE TABLE IF NOT EXISTS files (
+ file_id       INTEGER PRIMARY KEY AUTO_INCREMENT
+,file_build_id INTEGER
+,file_proc_id  INTEGER
+,file_name     VARCHAR(250)
+,file_mime     VARCHAR(250)
+,file_size     INTEGER
+,file_time     INTEGER
+,file_data     MEDIUMBLOB
+
+,UNIQUE(file_proc_id, file_name)
+);
+`
+
+var createIndexFilesBuilds = `
+CREATE INDEX file_build_ix ON files (file_build_id);
+`
+
+var createIndexFilesProcs = `
+CREATE INDEX file_proc_ix  ON files (file_proc_id);
 `

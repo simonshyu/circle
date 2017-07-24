@@ -27,6 +27,16 @@ type (
 		Labels map[string]string `json:"labels"`
 		Expr   string            `json:"expr"`
 	}
+
+	// File defines a pipeline artifact.
+	File struct {
+		Name string `json:"name"`
+		Proc string `json:"proc"`
+		Mime string `json:"mime"`
+		Time int64  `json:"time"`
+		Size int    `json:"size"`
+		Data []byte `json:"data"`
+	}
 )
 
 type Peer interface {
@@ -47,4 +57,7 @@ type Peer interface {
 
 	// Update updates the pipeline state.
 	Update(c context.Context, id string, state State) error
+
+	// Upload uploads the pipeline artifact.
+	Upload(c context.Context, id string, file *File) error
 }

@@ -61,6 +61,8 @@ func (s *Server) router(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.
 		return s.extend(ctx, req)
 	case methodUpdate:
 		return s.update(req)
+	case methodUpload:
+		return s.upload(req)
 	default:
 		return nil, errNoSuchMethod
 	}
@@ -126,4 +128,12 @@ func (s *Server) update(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	return nil, s.peer.Update(noContext, in.ID, in.State)
+}
+
+func (s *Server) upload(req *jsonrpc2.Request) (interface{}, error) {
+	in := new(uploadReq)
+	if err := json.Unmarshal([]byte(*req.Params), in); err != nil {
+		return nil, err
+	}
+	return nil, s.peer.Upload(noContext, in.ID, in.File)
 }

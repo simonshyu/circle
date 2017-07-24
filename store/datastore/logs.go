@@ -17,4 +17,15 @@ func (db *datastore) LogFind(proc *model.Proc) (io.ReadCloser, error) {
 	return ioutil.NopCloser(buf), err
 }
 
+func (db *datastore) LogSave(proc *model.Proc, r io.Reader) error {
+	stmt := sql.Lookup(db.driver, "log-find-job-id")
+	log := new(model.LogData)
+	err := meddler.QueryRow(db, log, stmt, proc.ID)
+	if err != nil {
+		log = &model.LogData{ProcID: proc.ID}
+	}
+	log.Data, _ = ioutil.ReadAll(r)
+	return meddler.Save(db, logTable, log)
+}
+
 const logTable = "logs"

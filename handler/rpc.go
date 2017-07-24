@@ -3,6 +3,7 @@ package handler
 // TODO: convert rpc2 to rpc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/SimonXming/circle/model"
@@ -326,5 +327,50 @@ func (s *RPC) Update(c context.Context, id string, state rpc.State) error {
 	// })
 	// s.pubsub.Publish(c, "topic/events", message)
 
+	return nil
+}
+
+// Upload implements the rpc.Upload function
+func (s *RPC) Upload(c context.Context, id string, file *rpc.File) error {
+	procID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	pproc, err := s.store.ProcLoad(procID)
+	if err != nil {
+		log.Printf("error: cannot find parent proc with id %d: %s", procID, err)
+		return err
+	}
+
+	build, err := s.store.BuildLoad(pproc.BuildID)
+	if err != nil {
+		log.Printf("error: cannot find build with id %d: %s", pproc.BuildID, err)
+		return err
+	}
+
+	proc, err := s.store.ProcChild(build, pproc.PID, file.Proc)
+	if err != nil {
+		log.Printf("error: cannot find child proc with name %s: %s", file.Proc, err)
+		return err
+	}
+
+	if file.Mime == "application/json+logs" {
+		return s.store.LogSave(
+			proc,
+			bytes.NewBuffer(file.Data),
+		)
+	}
+
+	// return Config.Storage.Files.FileCreate(&model.File{
+	// 	BuildID: proc.BuildID,
+	// 	ProcID:  proc.ID,
+	// 	Mime:    file.Mime,
+	// 	Name:    file.Name,
+	// 	Size:    file.Size,
+	// 	Time:    file.Time,
+	// },
+	// 	bytes.NewBuffer(file.Data),
+	// )
 	return nil
 }

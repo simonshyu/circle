@@ -43,6 +43,7 @@ type Store interface {
 	TaskDelete(string) error
 
 	LogFind(*model.Proc) (io.ReadCloser, error)
+	LogSave(*model.Proc, io.Reader) error
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {

@@ -94,7 +94,7 @@ imports:
 - name: github.com/russross/meddler
   version: 9515f6b01c158e6a98939d1ddfddb8a05544e08d
 - name: github.com/SimonXming/pipeline
-  version: 24428275f2665d5a4ee0d124f86bc94d6972f794
+  version: ebdd7744c223c28407276f8f01429e0c834ceabd
   subpackages:
   - pipeline
   - pipeline/backend
