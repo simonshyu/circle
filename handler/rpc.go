@@ -1,7 +1,5 @@
 package handler
 
-// TODO: convert rpc2 to rpc
-
 import (
 	"bytes"
 	"context"
