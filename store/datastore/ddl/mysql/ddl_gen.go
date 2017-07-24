@@ -48,6 +48,22 @@ var migrations = []struct {
 		name: "create-table-tasks",
 		stmt: createTableTasks,
 	},
+	{
+		name: "create-table-logs",
+		stmt: createTableLogs,
+	},
+	{
+		name: "create-table-files",
+		stmt: createTableFiles,
+	},
+	{
+		name: "create-index-files-builds",
+		stmt: createIndexFilesBuilds,
+	},
+	{
+		name: "create-index-files-procs",
+		stmt: createIndexFilesProcs,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -132,13 +148,17 @@ CREATE TABLE IF NOT EXISTS repos (
  repo_id            INTEGER PRIMARY KEY AUTO_INCREMENT
 ,repo_scm_id        INTEGER
 ,repo_clone         VARCHAR(1000)
+,repo_link          VARCHAR(1000)
 ,repo_branch        VARCHAR(500)
 ,repo_full_name     VARCHAR(500)
 ,repo_owner         VARCHAR(250)
 ,repo_name          VARCHAR(250)
-,repo_allow_pr      TINYINT(1)
-,repo_allow_push    TINYINT(1)
-,repo_allow_tags    TINYINT(1)
+,repo_timeout       INTEGER
+,repo_private       BOOLEAN
+,repo_allow_pr      BOOLEAN
+,repo_allow_push    BOOLEAN
+,repo_allow_tags    BOOLEAN
+,repo_allow_manual  BOOLEAN
 ,repo_counter       INTEGER
 ,repo_hash          VARCHAR(500)
 
@@ -163,6 +183,7 @@ CREATE TABLE IF NOT EXISTS builds (
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
+,build_link      VARCHAR(1000)
 ,build_commit    VARCHAR(500)
 ,build_branch    VARCHAR(500)
 ,build_ref       VARCHAR(500)
@@ -201,7 +222,7 @@ CREATE TABLE IF NOT EXISTS secrets (
  secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_repo_id     INTEGER
 ,secret_name        VARCHAR(250)
-,secret_is_default  TINYINT(1)
+,secret_is_default  BOOLEAN
 ,secret_value       MEDIUMBLOB
 
 ,UNIQUE(secret_is_default, secret_repo_id)
@@ -266,4 +287,44 @@ CREATE TABLE IF NOT EXISTS tasks (
 ,task_data   MEDIUMBLOB
 ,task_labels MEDIUMBLOB
 );
+`
+
+//
+// 08_create_table_logs.sql
+//
+
+var createTableLogs = `
+CREATE TABLE IF NOT EXISTS logs (
+ log_id     INTEGER PRIMARY KEY AUTO_INCREMENT
+,log_job_id INTEGER
+,log_data   MEDIUMBLOB
+
+,UNIQUE(log_job_id)
+);
+`
+
+//
+// 09_create_table_files.sql
+//
+var createTableFiles = `
+CREATE TABLE IF NOT EXISTS files (
+ file_id       INTEGER PRIMARY KEY AUTO_INCREMENT
+,file_build_id INTEGER
+,file_proc_id  INTEGER
+,file_name     VARCHAR(250)
+,file_mime     VARCHAR(250)
+,file_size     INTEGER
+,file_time     INTEGER
+,file_data     MEDIUMBLOB
+
+,UNIQUE(file_proc_id, file_name)
+);
+`
+
+var createIndexFilesBuilds = `
+CREATE INDEX file_build_ix ON files (file_build_id);
+`
+
+var createIndexFilesProcs = `
+CREATE INDEX file_proc_ix  ON files (file_proc_id);
 `

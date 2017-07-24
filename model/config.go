@@ -14,3 +14,7 @@ type Config struct {
 	Data   string `json:"data" meddler:"config_data"`
 	Hash   string `json:"hash" meddler:"config_hash"`
 }
+
+/*
+Field Explanation:
+*/

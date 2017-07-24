@@ -6,6 +6,7 @@ import (
 	"github.com/SimonXming/circle/router"
 	cimiddleware "github.com/SimonXming/circle/router/middleware"
 	"github.com/SimonXming/circle/store"
+	"github.com/SimonXming/logging"
 	"github.com/labstack/echo/middleware"
 	"github.com/urfave/cli"
 )
@@ -36,6 +37,7 @@ func server(c *cli.Context) error {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(cimiddleware.StoreWithConfig(s))
+	e.Use(cimiddleware.CircleContext())
 	router.Load(e)
 	e.Logger.Fatal(e.Start("0.0.0.0:8000"))
 	return nil
@@ -45,6 +47,7 @@ func setupEvilGlobals(c *cli.Context, v store.Store) {
 	// storage
 	ciserver.Config.Storage.Config = v
 	ciserver.Config.Services.Queue = setupQueue(c, v)
+	ciserver.Config.Services.Logs = logging.New()
 
 	ciserver.Config.Pipeline.Limits.MemSwapLimit = 0
 	ciserver.Config.Pipeline.Limits.MemLimit = 0

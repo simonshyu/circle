@@ -47,6 +47,16 @@ func ParseRequest(r *http.Request, fn SecretFunc) (*Token, error) {
 		return Parse(token, fn)
 	}
 
+	token = r.Header.Get("X-Gitlab-Token")
+
+	// first we attempt to get the token from the
+	// authorization header.
+	if len(token) != 0 {
+		token = r.Header.Get("X-Gitlab-Token")
+		fmt.Sscanf(token, "Bearer %s", &token)
+		return Parse(token, fn)
+	}
+
 	// then we attempt to get the token from the
 	// access_token url query parameter
 	token = r.FormValue("access_token")

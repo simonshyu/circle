@@ -6,16 +6,24 @@ func Lookup(name string) string {
 }
 
 var index = map[string]string{
-	"scm-account-list":    scmAccountList,
-	"scm-account-find-id": scmAccountFindId,
-	"repo-list":           repoList,
-	"repo-find-id":        repoFindId,
-	"repo-find-scm-id":    repoFindScmId,
-	"repo-update-counter": repoUpdateCounter,
-	"config-find-id":      configFindId,
-	"config-find-repo":    configFindRepo,
-	"task-list":           taskList,
-	"task-delete":         taskDelete,
+	"scm-account-list":          scmAccountList,
+	"scm-account-find-id":       scmAccountFindId,
+	"repo-list":                 repoList,
+	"repo-find-id":              repoFindId,
+	"repo-find-scm-id":          repoFindScmId,
+	"repo-find-scm-id-fullname": repoFindScmIdFullname,
+	"repo-update-counter":       repoUpdateCounter,
+	"build-find-id":             buildFindId,
+	"build-find-number":         buildFindNumber,
+	"config-find-id":            configFindId,
+	"config-find-repo":          configFindRepo,
+	"proc-find-build":           procsFindBuild,
+	"proc-find-id":              procFindId,
+	"proc-find-build-ppid":      procFindBuildPpid,
+	"proc-delete-build":         procDeleteBuild,
+	"task-list":                 taskList,
+	"task-delete":               taskDelete,
+	"log-find-job-id":           logFindProc,
 }
 
 var scmAccountList = `
@@ -46,13 +54,17 @@ SELECT
  repo_id
 ,repo_scm_id
 ,repo_clone
+,repo_link
 ,repo_branch
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -64,12 +76,16 @@ SELECT
 ,repo_scm_id
 ,repo_clone
 ,repo_branch
+,repo_link
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -82,12 +98,16 @@ SELECT
 ,repo_scm_id
 ,repo_clone
 ,repo_branch
+,repo_link
 ,repo_full_name
 ,repo_owner
 ,repo_name
+,repo_timeout
+,repo_private
 ,repo_allow_pr
 ,repo_allow_push
 ,repo_allow_tags
+,repo_allow_manual
 ,repo_counter
 ,repo_hash
 FROM repos
@@ -95,10 +115,82 @@ WHERE repo_scm_id = ?
 ORDER BY repo_id ASC
 `
 
+var repoFindScmIdFullname = `
+SELECT
+ repo_id
+,repo_scm_id
+,repo_clone
+,repo_branch
+,repo_link
+,repo_full_name
+,repo_owner
+,repo_name
+,repo_timeout
+,repo_private
+,repo_allow_pr
+,repo_allow_push
+,repo_allow_tags
+,repo_allow_manual
+,repo_counter
+,repo_hash
+FROM repos
+WHERE repo_scm_id    = ?
+  AND repo_full_name = ?
+LIMIT 1;
+`
+
 var repoUpdateCounter = `
 UPDATE repos SET repo_counter = ?
 WHERE repo_counter = ?
   AND repo_id = ?
+`
+
+var buildFindId = `
+SELECT
+ build_id
+,build_config_id
+,build_repo_id
+,build_number
+,build_event
+,build_status
+,build_error
+,build_enqueued
+,build_created
+,build_started
+,build_finished
+,build_link
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+FROM builds
+WHERE build_id = ?
+`
+
+var buildFindNumber = `
+SELECT
+ build_id
+,build_config_id
+,build_repo_id
+,build_number
+,build_event
+,build_status
+,build_error
+,build_enqueued
+,build_created
+,build_started
+,build_finished
+,build_link
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+FROM builds
+WHERE build_repo_id = ?
+  AND build_number = ?
+LIMIT 1;
 `
 
 var configFindId = `
@@ -122,6 +214,70 @@ WHERE config_repo_id = ?
 LIMIT 1
 `
 
+var procsFindBuild = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+ORDER BY proc_id ASC
+`
+
+var procFindId = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_id = ?
+`
+
+var procFindBuildPpid = `
+SELECT
+ proc_id
+,proc_build_id
+,proc_pid
+,proc_ppid
+,proc_name
+,proc_state
+,proc_error
+,proc_exit_code
+,proc_started
+,proc_stopped
+,proc_machine
+,proc_platform
+,proc_environ
+FROM procs
+WHERE proc_build_id = ?
+  AND proc_ppid = ?
+  AND proc_name = ?
+`
+
+var procDeleteBuild = `
+DELETE FROM procs WHERE proc_build_id = ?
+`
+
 var taskList = `
 SELECT
  task_id
@@ -132,4 +288,14 @@ FROM tasks
 
 var taskDelete = `
 DELETE FROM tasks WHERE task_id = ?
+`
+
+var logFindProc = `
+SELECT
+ log_id
+,log_job_id
+,log_data
+FROM logs
+WHERE log_job_id = ?
+LIMIT 1
 `

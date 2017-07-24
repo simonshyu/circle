@@ -30,6 +30,17 @@ const (
 	defaultBackoff     = 10 * time.Second
 )
 
+type (
+	uploadReq struct {
+		ID   string `json:"id"`
+		File *File  `json:"file"`
+	}
+	updateReq struct {
+		ID    string `json:"id"`
+		State State  `json:"state"`
+	}
+)
+
 // Client represents an rpc client.
 type Client struct {
 	sync.Mutex
@@ -63,6 +74,44 @@ func (t *Client) Next(c context.Context, f Filter) (*Pipeline, error) {
 	res := new(Pipeline)
 	err := t.call(c, methodNext, f, res)
 	return res, err
+}
+
+// Wait blocks until the pipeline is complete.
+func (t *Client) Wait(c context.Context, id string) error {
+	// err := t.call(c, methodWait, id, nil)
+	// if err != nil && err.Error() == ErrCancelled.Error() {
+	// 	return ErrCancelled
+	// }
+	return t.call(c, methodWait, id, nil)
+}
+
+// Init signals the pipeline is initialized.
+func (t *Client) Init(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodInit, &params, nil)
+}
+
+// Done signals the pipeline is complete.
+func (t *Client) Done(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodDone, &params, nil)
+}
+
+// Extend extends the pipeline deadline.
+func (t *Client) Extend(c context.Context, id string) error {
+	return t.call(c, methodExtend, id, nil)
+}
+
+// Update updates the pipeline state.
+func (t *Client) Update(c context.Context, id string, state State) error {
+	params := updateReq{id, state}
+	return t.call(c, methodUpdate, &params, nil)
+}
+
+// Upload uploads the pipeline artifact.
+func (t *Client) Upload(c context.Context, id string, file *File) error {
+	params := uploadReq{id, file}
+	return t.call(c, methodUpload, params, nil)
 }
 
 // Close closes the client connection.
@@ -130,5 +179,6 @@ func (t *Client) open() error {
 	}
 	stream := websocketrpc.NewObjectStream(conn)
 	t.conn = jsonrpc2.NewConn(context.Background(), stream, nil)
+	log.Printf("rpc: connected to: %s", t.endpoint)
 	return nil
 }

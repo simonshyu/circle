@@ -31,6 +31,10 @@ type Proc struct {
 	Children []*Proc           `json:"children,omitempty"   meddler:"-"`
 }
 
+/*
+Field Explanation:
+*/
+
 // Running returns true if the process state is pending or running.
 func (p *Proc) Running() bool {
 	return p.State == StatusPending || p.State == StatusRunning

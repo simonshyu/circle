@@ -197,3 +197,31 @@ type Remote interface {
 
 2. 假设 master 分支发生 tag_push 事件，`http://127.0.0.1:8000/scm-2/repo-1/hook` 触发。
 服务器根据 scmID 和 repo 信息找到 repoID。因为 repo.allow_tag。所以 `repo.config_list` 中每一个 config 都构建。
+
+
+## 与 build 相关的问题
+
+### drone:
+
+* 默认第一次构建必须由 webhook 触发
+* 用户手动触发的情况包括：
+	* 复制某一次构建，并创建一次新的构建
+	* 重新运行某一次构建
+
+### circle:
+* 允许 webhook 触发
+* 用户手动触发的情况包括：
+	* 新增构建类型 manual (意为: 用户手动触发 repo 默认分支 refs/heads/{DEFAULT_BRANCH} 的构建)
+	* fork 一次构建
+	* re-run 一次构建
+
+
+```golang
+// github.com/SimonXming/pipeline/pipeline/frontend/yaml/complier/convert
+
+func (c *Compiler) createProcess(name string, container *yaml.Container) *backend.Step 
+/*
+这个方法里会初始化 backend.Step 里的大部分信息
+*/
+
+```

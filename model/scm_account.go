@@ -9,3 +9,7 @@ type ScmAccount struct {
 	PrivateToken string `json:"private_token,omitempty" meddler:"scm_private_token"`
 	Type         string `json:"scm_type,omitempty"      meddler:"scm_type"`
 }
+
+/*
+Field Explanation:
+*/

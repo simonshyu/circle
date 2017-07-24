@@ -6,7 +6,7 @@ import (
 	"fmt"
 	// "net/url"
 	"strconv"
-	// "strings"
+	"strings"
 
 	"github.com/SimonXming/circle/remote/gitlab/client"
 )
@@ -25,6 +25,14 @@ func NewClient(url, token string, skipVerify bool) *client.Client {
 
 func ns(owner, name string) string {
 	return fmt.Sprintf("%s%%2F%s", owner, name)
+}
+
+func ExtractFromPath(str string) (string, string, error) {
+	s := strings.Split(str, "/")
+	if len(s) < 2 {
+		return "", "", fmt.Errorf("Minimum match not found")
+	}
+	return s[0], s[1], nil
 }
 
 func GetProjectId(r *Gitlab, c *client.Client, owner, name string) (projectId string, err error) {

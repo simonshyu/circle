@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"math/rand"
@@ -11,14 +12,13 @@ import (
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/remote"
 	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/utils"
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/pipeline/pipeline/backend"
 	"github.com/SimonXming/pipeline/pipeline/frontend"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/matrix"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
+	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/SimonXming/queue"
 
 	"github.com/labstack/echo"
@@ -27,6 +27,12 @@ import (
 )
 
 func PostBuild(c echo.Context) error {
+	cc, ok := c.(*CircleContext)
+	if !ok {
+		c.String(http.StatusBadRequest, "Context 转换失败.")
+		return errors.New("Context 转换失败.")
+	}
+	_type := cc.DefaultQueryParam("type", model.BuildManual)
 	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
 	if err != nil {
 		c.Error(err)
@@ -45,43 +51,92 @@ func PostBuild(c echo.Context) error {
 		return err
 	}
 
-	account, err := store.ScmAccountLoad(c, repo.ScmId)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return err
-	}
-	err = utils.SetupRemote(c, account)
+	account, err := store.SetupRemoteWithScmID(c, repo.ScmId)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return err
 	}
 
-	remote := remote.FromContext(c)
-
-	netrc, err := remote.Netrc(account)
+	netrc, err := remote.Netrc(c, account)
 	if err != nil {
 		logrus.Errorf("failure to generate netrc for %s. %s", repo.FullName, err)
 		c.String(http.StatusNotFound, err.Error())
 		return err
 	}
 
-	build := new(model.Build)
-	build.RepoID = repoID
-	build.Number = 0
-	build.Event = "pull_request"
-	build.Ref = "refs/heads/master"
-	build.Branch = "master"
-	build.Refspec = "refs/heads/master"
-	// build.Commit = "f14fd3e6cd6df28ad91cdb7dcadea60516d17282"
-	build.Status = model.StatusPending
-	build.Started = 0
-	build.Finished = 0
-	build.Enqueued = time.Now().UTC().Unix()
-	build.Error = ""
-	err = store.BuildCreate(c, build)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return err
+	var build *model.Build
+
+	if _type == model.BuildManual {
+		build = new(model.Build)
+		build.RepoID = repoID
+		build.Number = 0
+		build.Event = model.EventManual
+		build.Ref = fmt.Sprintf("refs/heads/%s", repo.Branch)
+		build.Branch = repo.Branch
+		build.Refspec = fmt.Sprintf("refs/heads/%s", repo.Branch)
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.BuildCreate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+	} else if _type == model.BuildFork {
+		num, err := strconv.Atoi(c.QueryParam("number"))
+		if err != nil {
+			c.Error(err)
+			return err
+		}
+		build, err = store.GetBuildNumber(c, repo, num)
+		if err != nil {
+			logrus.Errorf("failure to get build %d. %s", num, err)
+			c.String(http.StatusNotFound, err.Error())
+			return err
+		}
+		build.ID = 0
+		build.Number = 0
+		// build.Event: using the same event
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.BuildCreate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+	} else if _type == model.BuildRerun {
+		num, err := strconv.Atoi(c.QueryParam("number"))
+		if err != nil {
+			c.Error(err)
+			return err
+		}
+		build, err = store.GetBuildNumber(c, repo, num)
+		if err != nil {
+			logrus.Errorf("failure to get build %d. %s", num, err)
+			c.String(http.StatusNotFound, err.Error())
+			return err
+		}
+		build.Status = model.StatusPending
+		build.Started = 0
+		build.Finished = 0
+		build.Enqueued = time.Now().UTC().Unix()
+		build.Error = ""
+		err = store.ProcClear(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
+
+		err = store.BuildUpdate(c, build)
+		if err != nil {
+			c.String(http.StatusBadRequest, err.Error())
+			return err
+		}
 	}
 
 	envs := map[string]string{}
@@ -105,18 +160,32 @@ func PostBuild(c echo.Context) error {
 		return err
 	}
 
+	// 如果没有用到 matrix 语法，
+	// len(items) == 1
+
+	// pcounter 代表构建流程的个数
 	var pcounter = len(items)
 	for _, item := range items {
+		// initProc := *(item.Proc)
 		build.Procs = append(build.Procs, item.Proc)
 		item.Proc.BuildID = build.ID
 
 		for _, stage := range item.Config.Stages {
+			// 初始化 gid 的值
 			var gid int
 			for _, step := range stage.Steps {
+				// 每多一个 step，pcounter 就会自增 +1
+				// ** 因此 PID 用于标示 step
 				pcounter++
 				if gid == 0 {
+					// 在每个 stage 的第一个 step 时令 gid = pcounter
+					// ** PGID 用于标示 stage 的值
+					// 第一个 stage 的gid值是 （matrix 个数 +1）
+					// 第二个 stage 的gid值是 （matrix 个数 + 上一个stage的step数 + 1）
+					// 第 n 个 stage 的gid值是 （matrix 个数 + 第 n-1 个stage的step数 + 1）
 					gid = pcounter
 				}
+				// ** PPID 用于标示 matrix item
 				proc := &model.Proc{
 					BuildID: build.ID,
 					Name:    step.Alias,
@@ -137,6 +206,8 @@ func PostBuild(c echo.Context) error {
 
 	c.JSON(http.StatusAccepted, build)
 
+	// 如果没有用到 matrix 语法，
+	// len(items) == 1
 	for _, item := range items {
 		task := new(queue.Task)
 		task.ID = fmt.Sprint(item.Proc.ID)
@@ -146,11 +217,10 @@ func PostBuild(c echo.Context) error {
 			task.Labels[k] = v
 		}
 
-		task.Data, _ = json.Marshal(rpc2.Pipeline{
-			ID:     fmt.Sprint(item.Proc.ID),
-			Config: item.Config,
-			// Timeout: b.Repo.Timeout,
-			Timeout: 60,
+		task.Data, _ = json.Marshal(rpc.Pipeline{
+			ID:      fmt.Sprint(item.Proc.ID),
+			Config:  item.Config,
+			Timeout: b.Repo.Timeout,
 		})
 
 		// Config.Services.Logs.Open(context.Background(), task.ID)
@@ -164,8 +234,8 @@ func PostBuild(c echo.Context) error {
 func metadataFromStruct(repo *model.Repo, build *model.Build, proc *model.Proc, link string) frontend.Metadata {
 	return frontend.Metadata{
 		Repo: frontend.Repo{
-			Name: repo.FullName,
-			// Link:    repo.Link,
+			Name:   repo.FullName,
+			Link:   repo.Link,
 			Remote: repo.Clone,
 			// Private: repo.IsPrivate,
 		},
@@ -176,6 +246,7 @@ func metadataFromStruct(repo *model.Repo, build *model.Build, proc *model.Proc, 
 			Finished: build.Finished,
 			Status:   build.Status,
 			Event:    build.Event,
+			Link:     build.Link,
 			Commit: frontend.Commit{
 				Sha:     build.Commit,
 				Ref:     build.Ref,
@@ -235,9 +306,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 		// 定义每一步所需要的环境变量
 		metadata := metadataFromStruct(b.Repo, b.Curr, proc, b.Link)
 		environ := metadata.Environ()
-		for k, v := range metadata.EnvironDrone() {
-			environ[k] = v
-		}
+
 		for k, v := range axis {
 			environ[k] = v
 		}
@@ -265,9 +334,10 @@ func (b *builder) Build() ([]*buildItem, error) {
 					b.Netrc.Password,
 					b.Netrc.Machine,
 				),
-				true,
-				// b.Repo.IsPrivate,
+				b.Repo.IsPrivate,
 			),
+			// compiler.WithRegistry(registries...),
+			// compiler.WithSecret(secrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
@@ -277,6 +347,7 @@ func (b *builder) Build() ([]*buildItem, error) {
 			),
 			compiler.WithEnviron(proc.Environ),
 			compiler.WithProxy(),
+			compiler.WithWorkspaceFromURL("/circle", b.Curr.Link),
 			compiler.WithMetadata(metadata),
 		).Compile(parsed)
 

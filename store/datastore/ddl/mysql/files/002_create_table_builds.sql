@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS builds (
 ,build_created   INTEGER
 ,build_started   INTEGER
 ,build_finished  INTEGER
+,build_link      VARCHAR(1000)
 ,build_commit    VARCHAR(500)
 ,build_branch    VARCHAR(500)
 ,build_ref       VARCHAR(500)

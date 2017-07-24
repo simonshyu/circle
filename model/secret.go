@@ -9,3 +9,7 @@ type Secret struct {
 	Name      string `json:"name"            meddler:"secret_name"`
 	Value     string `json:"value,omitempty" meddler:"secret_value"`
 }
+
+/*
+Field Explanation:
+*/

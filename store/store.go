@@ -1,7 +1,7 @@
 package store
 
 import (
-	// "io"
+	"io"
 
 	"github.com/SimonXming/circle/model"
 	"github.com/SimonXming/circle/utils"
@@ -19,23 +19,31 @@ type Store interface {
 
 	RepoCreate(*model.Repo) error
 	RepoLoad(int64) (*model.Repo, error)
-
 	// GetRepoName gets a repo by its full name.
 	RepoList() ([]*model.Repo, error)
 	RepoFind(*model.ScmAccount) ([]*model.Repo, error)
-	GetRepoName(string) (*model.Repo, error)
 	GetRepoScmName(int64, string) (*model.Repo, error)
 
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build, ...*model.Proc) error
+	BuildLoad(int64) (*model.Build, error)
 	BuildUpdate(*model.Build) error
+	GetBuildNumber(*model.Repo, int) (*model.Build, error)
 
 	ProcCreate([]*model.Proc) error
+	ProcList(*model.Build) ([]*model.Proc, error)
+	ProcLoad(int64) (*model.Proc, error)
+	ProcChild(*model.Build, int, string) (*model.Proc, error)
+	ProcUpdate(*model.Proc) error
+	ProcClear(*model.Build) error
 
 	TaskList() ([]*model.Task, error)
 	TaskInsert(*model.Task) error
 	TaskDelete(string) error
+
+	LogFind(*model.Proc) (io.ReadCloser, error)
+	LogSave(*model.Proc, io.Reader) error
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {
@@ -74,10 +82,6 @@ func RepoLoad(c echo.Context, id int64) (*model.Repo, error) {
 	return FromContext(c).RepoLoad(id)
 }
 
-func GetRepoOwnerName(c echo.Context, owner, name string) (*model.Repo, error) {
-	return FromContext(c).GetRepoName(owner + "/" + name)
-}
-
 func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*model.Repo, error) {
 	return FromContext(c).GetRepoScmName(scmID, owner+"/"+name)
 }
@@ -90,12 +94,44 @@ func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error
 	return FromContext(c).BuildCreate(build, procs...)
 }
 
+func BuildLoad(c echo.Context, id int64) (*model.Build, error) {
+	return FromContext(c).BuildLoad(id)
+}
+
 func BuildUpdate(c echo.Context, build *model.Build) error {
 	return FromContext(c).BuildUpdate(build)
 }
 
+func GetBuildNumber(c echo.Context, repo *model.Repo, num int) (*model.Build, error) {
+	return FromContext(c).GetBuildNumber(repo, num)
+}
+
 func ProcCreate(c echo.Context, procs []*model.Proc) error {
 	return FromContext(c).ProcCreate(procs)
+}
+
+func ProcList(c echo.Context, build *model.Build) ([]*model.Proc, error) {
+	return FromContext(c).ProcList(build)
+}
+
+func ProcLoad(c echo.Context, id int64) (*model.Proc, error) {
+	return FromContext(c).ProcLoad(id)
+}
+
+func ProcChild(c echo.Context, build *model.Build, pid int, child string) (*model.Proc, error) {
+	return FromContext(c).ProcChild(build, pid, child)
+}
+
+func ProcUpdate(c echo.Context, proc *model.Proc) error {
+	return FromContext(c).ProcUpdate(proc)
+}
+
+func ProcClear(c echo.Context, build *model.Build) error {
+	return FromContext(c).ProcClear(build)
+}
+
+func LogFind(c echo.Context, proc *model.Proc) (io.ReadCloser, error) {
+	return FromContext(c).LogFind(proc)
 }
 
 // helper: 合并 ScmAccountLoad 和 SetupRemote 的功能

@@ -29,4 +29,6 @@ func Load(e *echo.Echo) {
 	websocketGroup := e.Group("/ws")
 	websocketGroup.GET("/broker", handler.RPCHandler)
 
+	e.POST("/hook", handler.PostHook)
+	e.POST("/api/hook", handler.PostHook)
 }

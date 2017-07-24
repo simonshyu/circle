@@ -2,29 +2,33 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/SimonXming/pipeline/pipeline/interrupt"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
-	"github.com/SimonXming/pipeline/pipeline/rpc2"
 	"github.com/tevino/abool"
 	"github.com/urfave/cli"
 	"log"
+	"math"
+	"net/url"
+	"strconv"
 	"sync"
 	"time"
 )
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/SimonXming/pipeline/pipeline"
 	"github.com/SimonXming/pipeline/pipeline/backend"
 	"github.com/SimonXming/pipeline/pipeline/backend/docker"
-	"github.com/SimonXming/pipeline/pipeline/frontend"
-	"github.com/SimonXming/pipeline/pipeline/frontend/yaml"
-	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/multipart"
 	"io"
 	"os"
+)
+
+const (
+	maxFileUpload = 5000000
+	maxLogsUpload = 5000000
+	maxProcs      = 1
+	retryLimit    = math.MaxInt32
 )
 
 // Command exports the agent command.
@@ -35,14 +39,25 @@ var Command = cli.Command{
 }
 
 func loop(c *cli.Context) error {
-	endpoint := "ws://localhost:8000/ws/broker"
-	filter := rpc2.Filter{
+	endpoint, err := url.Parse(
+		"ws://localhost:8000/ws/broker",
+	)
+	if err != nil {
+		return err
+	}
+	filter := rpc.Filter{
 		Labels: map[string]string{
 			"platform": "linux/amd64",
 		},
 	}
-	client, err := rpc2.NewClient(
-		endpoint,
+	client, err := rpc.NewClient(
+		endpoint.String(),
+		rpc.WithRetryLimit(
+			retryLimit,
+		),
+		rpc.WithBackoff(
+			time.Second*15,
+		),
 	)
 	if err != nil {
 		return err
@@ -57,7 +72,7 @@ func loop(c *cli.Context) error {
 	})
 
 	var wg sync.WaitGroup
-	parallel := 1
+	parallel := maxProcs
 	wg.Add(parallel)
 
 	for i := 0; i < parallel; i++ {
@@ -91,23 +106,65 @@ run 方法是 agent 的主要运行逻辑
 9. 通过 connection 同步 pipelone 状态
 */
 
-func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
+func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
-	time.Sleep(time.Second * 1)
 
-	// path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.yaml"
+	// get the next job from the queue
+	work, err := client.Next(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if work == nil {
+		return nil
+	}
+	log.Printf("pipeline: received next execution: %s", work.ID)
 
-	// e := testRunPipeline(ctx, client, path)
-	// if e != nil {
-	// 	println(e)
-	// }
-
+	// new docker engine
 	engine, err := docker.NewEnv()
 	if err != nil {
 		return err
 	}
 
-	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+	timeout := time.Hour
+	if minutes := work.Timeout; minutes != 0 {
+		timeout = time.Duration(minutes) * time.Minute
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	cancelled := abool.New()
+	go func() {
+		if werr := client.Wait(ctx, work.ID); werr != nil {
+			cancelled.SetTo(true)
+			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
+			cancel()
+		} else {
+			log.Printf("pipeline: cancel channel closed: %s", work.ID)
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Printf("pipeline: cancel ping loop: %s", work.ID)
+				return
+			case <-time.After(time.Minute):
+				log.Printf("pipeline: ping queue: %s", work.ID)
+				client.Extend(ctx, work.ID)
+			}
+		}
+	}()
+
+	state := rpc.State{}
+	state.Started = time.Now().Unix()
+	err = client.Init(context.Background(), work.ID, state)
+	if err != nil {
+		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
+	}
+
+	localLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
 		part, err := rc.NextPart()
 		if err != nil {
 			return err
@@ -116,141 +173,103 @@ func run(ctx context.Context, client rpc2.Peer, filter rpc2.Filter) error {
 		return nil
 	})
 
-	println("Trying get a work ...")
-	work, err := client.Next(ctx, filter)
-	println("Success get a work.")
-	if err != nil {
-		return err
-	}
+	var uploads sync.WaitGroup
+	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
+		part, err := rc.NextPart()
+		if err != nil {
+			return err
+		}
+
+		uploads.Add(1)
+
+		limitedPart := io.LimitReader(part, maxLogsUpload)
+		logstream := rpc.NewLineWriter(client, work.ID, proc.Alias)
+		io.Copy(logstream, limitedPart)
+
+		file := &rpc.File{}
+		file.Mime = "application/json+logs"
+		file.Proc = proc.Alias
+		file.Name = "logs.json"
+		file.Data, _ = json.Marshal(logstream.Lines())
+		file.Size = len(file.Data)
+		file.Time = time.Now().Unix()
+
+		if serr := client.Upload(context.Background(), work.ID, file); serr != nil {
+			log.Printf("pipeline: cannot upload logs: %s: %s: %s", work.ID, file.Mime, serr)
+		} else {
+			log.Printf("pipeline: finish uploading logs: %s: step %s: %s", file.Mime, work.ID, proc.Alias)
+		}
+
+		defer func() {
+			log.Printf("pipeline: finish uploading logs: %s: step %s", work.ID, proc.Alias)
+			uploads.Done()
+		}()
+
+		io.Copy(os.Stderr, part)
+		return nil
+	})
+
+	defaultTracer := pipeline.TraceFunc(func(state *pipeline.State) error {
+		procState := rpc.State{
+			Proc:     state.Pipeline.Step.Alias,
+			Exited:   state.Process.Exited,
+			ExitCode: state.Process.ExitCode,
+			Started:  time.Now().Unix(), // TODO do not do this
+			Finished: time.Now().Unix(),
+		}
+		defer func() {
+			if uerr := client.Update(context.Background(), work.ID, procState); uerr != nil {
+				log.Printf("Pipeine: error updating pipeline step status: %s: %s: %s", work.ID, procState.Proc, uerr)
+			}
+		}()
+		if state.Process.Exited {
+			return nil
+		}
+		if state.Pipeline.Step.Environment == nil {
+			state.Pipeline.Step.Environment = map[string]string{}
+		}
+		state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "success"
+		state.Pipeline.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+		state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "success"
+		state.Pipeline.Step.Environment["CI_JOB_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
+		state.Pipeline.Step.Environment["CI_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+
+		if state.Pipeline.Error != nil {
+			state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "failure"
+			state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "failure"
+		}
+		return nil
+	})
 
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
-		// pipeline.WithTracer(defaultTracer),
+		pipeline.WithLogger(localLogger),
+		pipeline.WithTracer(defaultTracer),
 		pipeline.WithEngine(engine),
 	).Run()
+	state.Finished = time.Now().Unix()
+	state.Exited = true
 	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func testRunPipeline(ctx context.Context, client rpc.Peer, filePath string) error {
-	conf, err := yaml.ParseFile(filePath)
-	if err != nil {
-		return err
-	}
-	// fmt.Printf("%v", conf)
-	compiled := compiler.New(
-		compiler.WithPrefix(
-			"test",
-		),
-		compiler.WithLocal(
-			false,
-		),
-		compiler.WithMetadata(
-			metadataFromContext(),
-		),
-		compiler.WithNetrc(
-			"simon_xu@outlook.com",
-			"@git5508177QaZ",
-			"github.com",
-		),
-	).Compile(conf)
-
-	err = outputJson(compiled)
-	if err != nil {
-		return err
-	}
-
-	engine, err := docker.NewEnv()
-	if err != nil {
-		return err
-	}
-
-	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
-		part, err := rc.NextPart()
-		if err != nil {
-			return err
+		switch xerr := err.(type) {
+		case *pipeline.ExitError:
+			state.ExitCode = xerr.Code
+		default:
+			state.ExitCode = 1
+			state.Error = err.Error()
 		}
-		io.Copy(os.Stderr, part)
-		return nil
-	})
-
-	err = pipeline.New(compiled,
-		pipeline.WithContext(ctx),
-		pipeline.WithLogger(defaultLogger),
-		// pipeline.WithTracer(defaultTracer),
-		pipeline.WithEngine(engine),
-	).Run()
-
-	if err != nil {
-		fmt.Printf("%v", err)
-	}
-	return nil
-}
-
-func outputJson(compiled *backend.Config) error {
-	if false {
-		for _, stage := range compiled.Stages {
-			for _, step := range stage.Steps {
-				fmt.Printf("%v", step)
-			}
+		if cancelled.IsSet() {
+			state.ExitCode = 137
 		}
 	}
-	// marshal the compiled spec to formatted yaml
-	out, err := json.MarshalIndent(compiled, "", "  ")
+
+	log.Printf("pipeline: execution complete: %s", work.ID)
+
+	err = client.Done(context.Background(), work.ID, state)
 	if err != nil {
-		return err
+		log.Printf("Pipeine: error signaling pipeline done: %s: %s", work.ID, err)
 	}
 
-	// create output file with option to dump to stdout
-	var writer = os.Stdout
-	output := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/pipeline-example.json"
-	if output != "-" {
-		writer, err = os.Create(output)
-		if err != nil {
-			return err
-		}
-	}
-	defer writer.Close()
-
-	_, err = writer.Write(out)
-	if err != nil {
-		return err
-	}
 	return nil
-}
-
-func metadataFromContext() frontend.Metadata {
-	return frontend.Metadata{
-		Repo: frontend.Repo{
-			Name:    "go-practice",
-			Link:    "https://github.com/SimonXming/go-practice.git",
-			Remote:  "https://github.com/SimonXming/go-practice.git",
-			Private: false,
-		},
-		Curr: frontend.Build{
-			Number:   1,
-			Created:  0,
-			Started:  0,
-			Finished: 0,
-			Status:   "start",
-			Event:    "",
-			Link:     "",
-			Target:   "",
-			Commit: frontend.Commit{
-				Sha:     "50616752e10380848631c7c5bbabc87adb096d12",
-				Ref:     "refs/heads/master",
-				Refspec: "refs/heads/master",
-				Branch:  "master",
-				Message: "",
-				Author: frontend.Author{
-					Name:   "",
-					Email:  "",
-					Avatar: "",
-				},
-			},
-		},
-	}
 }

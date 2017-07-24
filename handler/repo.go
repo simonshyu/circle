@@ -96,6 +96,8 @@ func PostRepo(c echo.Context) error {
 	r.ScmId = scmId
 	r.AllowPush = true
 	r.AllowPull = true
+	r.AllowManual = true
+	r.Timeout = 60 // 1 hour default build time
 	r.Hash = base32.StdEncoding.EncodeToString(
 		securecookie.GenerateRandomKey(32),
 	)
@@ -109,9 +111,10 @@ func PostRepo(c echo.Context) error {
 	}
 
 	link := fmt.Sprintf(
-		"%s/hook?access_token=%s",
+		"%s/hook?access_token=%s&scm_id=%d",
 		httputil.GetURL(c.Request()),
 		sig,
+		scmId,
 	)
 
 	// activate the repository before we make any

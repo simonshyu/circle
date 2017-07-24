@@ -33,30 +33,11 @@ func (db *datastore) RepoLoad(id int64) (*model.Repo, error) {
 	return repo, err
 }
 
-func (db *datastore) GetRepoName(name string) (*model.Repo, error) {
-	var repo = new(model.Repo)
-	var err = meddler.QueryRow(db, repo, rebind(repoNameQuery), name)
-	return repo, err
-}
-
 func (db *datastore) GetRepoScmName(scmID int64, name string) (*model.Repo, error) {
-	var repo = new(model.Repo)
-	var err = meddler.QueryRow(db, repo, rebind(repoScmIDNameQuery), scmID, name)
+	stmt := sql.Lookup(db.driver, "repo-find-scm-id-fullname")
+	repo := new(model.Repo)
+	err := meddler.QueryRow(db, repo, stmt, scmID, name)
 	return repo, err
 }
 
 const repoTable = "repos"
-
-const repoNameQuery = `
-SELECT *
-FROM repos
-WHERE repo_full_name = ?
-LIMIT 1;
-`
-const repoScmIDNameQuery = `
-SELECT *
-FROM repos
-WHERE repo_scm_id    = ?
-  AND repo_full_name = ?
-LIMIT 1;
-`

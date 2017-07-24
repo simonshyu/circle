@@ -5,8 +5,6 @@ import:
 - package: github.com/labstack/echo
   version: ~3.1
 - package: github.com/tevino/abool
-- package: github.com/SimonXming/pipeline
-  version: ^1.0.0-beta
 - package: github.com/russross/meddler
 - package: github.com/Sirupsen/logrus
   version: ^1.0.0
@@ -17,3 +15,8 @@ import:
 - package: github.com/dgrijalva/jwt-go
   version: ^3.0.0
 - package: github.com/SimonXming/queue
+- package: github.com/SimonXming/pipeline
+  version: ^1.0.0-alpha
+- package: github.com/franela/goblin
+  version: ^0.0.1
+- package: github.com/SimonXming/logging
