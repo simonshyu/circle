@@ -1,6 +1,7 @@
 package model
 
 type RepoLite struct {
+	ID       int    `json:"remote_id"`
 	Owner    string `json:"owner"`
 	Name     string `json:"name"`
 	FullName string `json:"full_name"`

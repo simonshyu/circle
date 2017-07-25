@@ -36,6 +36,7 @@ func server(c *cli.Context) error {
 	e := ciserver.NewEchoServer()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 	e.Use(cimiddleware.StoreWithConfig(s))
 	e.Use(cimiddleware.CircleContext())
 	router.Load(e)

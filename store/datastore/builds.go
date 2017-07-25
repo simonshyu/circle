@@ -31,6 +31,13 @@ func (db *datastore) BuildCreate(build *model.Build, procs ...*model.Proc) error
 	return nil
 }
 
+func (db *datastore) BuildFind(repo *model.Repo) ([]*model.Build, error) {
+	stmt := sql.Lookup(db.driver, "build-find-repo-id")
+	builds := []*model.Build{}
+	err := meddler.QueryAll(db, &builds, stmt, repo.ID)
+	return builds, err
+}
+
 func (db *datastore) BuildLoad(id int64) (*model.Build, error) {
 	stmt := sql.Lookup(db.driver, "build-find-id")
 	build := new(model.Build)

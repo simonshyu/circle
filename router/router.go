@@ -21,8 +21,17 @@ func Load(e *echo.Echo) {
 		{
 			repoGroup.POST("", handler.PostRepo)
 			repoGroup.GET("", handler.GetRepos)
+			repoGroup.GET("/:repoID/config", handler.GetConfig)
 			repoGroup.POST("/:repoID/config", handler.PostConfig)
-			repoGroup.POST("/:repoID/build", handler.PostBuild)
+
+			buildGroup := repoGroup.Group("/:repoID/build")
+			{
+				buildGroup.GET("", handler.GetBuilds)
+				buildGroup.POST("", handler.PostBuild)
+				buildGroup.GET("/:num/proc", handler.GetBuildProcs)
+				buildGroup.GET("/:num/log/:ppid/:proc", handler.GetBuildProcLog)
+			}
+
 		}
 	}
 

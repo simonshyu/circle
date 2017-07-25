@@ -14,6 +14,7 @@ var index = map[string]string{
 	"repo-find-scm-id-fullname": repoFindScmIdFullname,
 	"repo-update-counter":       repoUpdateCounter,
 	"build-find-id":             buildFindId,
+	"build-find-repo-id":        buildFindRepoId,
 	"build-find-number":         buildFindNumber,
 	"config-find-id":            configFindId,
 	"config-find-repo":          configFindRepo,
@@ -166,6 +167,29 @@ SELECT
 ,build_remote
 FROM builds
 WHERE build_id = ?
+`
+
+var buildFindRepoId = `
+SELECT
+ build_id
+,build_config_id
+,build_repo_id
+,build_number
+,build_event
+,build_status
+,build_error
+,build_enqueued
+,build_created
+,build_started
+,build_finished
+,build_link
+,build_commit
+,build_branch
+,build_ref
+,build_refspec
+,build_remote
+FROM builds
+WHERE build_repo_id = ?
 `
 
 var buildFindNumber = `

@@ -139,6 +139,7 @@ func (g *Gitlab) Repos() ([]*model.RepoLite, error) {
 		var branch = repo.DefaultBranch
 
 		repos = append(repos, &model.RepoLite{
+			ID:       repo.Id,
 			Owner:    owner,
 			Name:     name,
 			FullName: repo.PathWithNamespace,

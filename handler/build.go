@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"io"
 	"math/rand"
 	"time"
 
@@ -25,6 +26,105 @@ import (
 	"net/http"
 	"strconv"
 )
+
+func GetBuilds(c echo.Context) error {
+	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	repo, err := store.RepoLoad(c, repoID)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	builds, err := store.BuildFind(c, repo)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	c.JSON(http.StatusOK, builds)
+	return nil
+}
+
+func GetBuildProcs(c echo.Context) error {
+	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	repo, err := store.RepoLoad(c, repoID)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	num, err := strconv.Atoi(c.Param("num"))
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	procs, err := store.ProcList(c, build)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	return c.JSON(http.StatusOK, procs)
+}
+
+func GetBuildProcLog(c echo.Context) error {
+	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	repo, err := store.RepoLoad(c, repoID)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	num, err := strconv.Atoi(c.Param("num"))
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	ppid, err := strconv.Atoi(c.Param("ppid"))
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	name := c.Param("proc")
+	build, err := store.GetBuildNumber(c, repo, num)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	proc, err := store.ProcChild(c, build, ppid, name)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	rc, err := store.LogFind(c, proc)
+	if err != nil {
+		c.String(http.StatusNotFound, err.Error())
+		return err
+	}
+
+	defer rc.Close()
+
+	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	io.Copy(c.Response().Writer, rc)
+
+	return nil
+}
 
 func PostBuild(c echo.Context) error {
 	cc, ok := c.(*CircleContext)

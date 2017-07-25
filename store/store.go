@@ -27,6 +27,7 @@ type Store interface {
 	SecretCreate(*model.Secret) error
 
 	BuildCreate(*model.Build, ...*model.Proc) error
+	BuildFind(*model.Repo) ([]*model.Build, error)
 	BuildLoad(int64) (*model.Build, error)
 	BuildUpdate(*model.Build) error
 	GetBuildNumber(*model.Repo, int) (*model.Build, error)
@@ -92,6 +93,10 @@ func SecretCreate(c echo.Context, secret *model.Secret) error {
 
 func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error {
 	return FromContext(c).BuildCreate(build, procs...)
+}
+
+func BuildFind(c echo.Context, repo *model.Repo) ([]*model.Build, error) {
+	return FromContext(c).BuildFind(repo)
 }
 
 func BuildLoad(c echo.Context, id int64) (*model.Build, error) {

@@ -74,6 +74,26 @@ func GetScmAccount(c echo.Context) error {
 
 }
 
+func GetConfig(c echo.Context) error {
+	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
+	if err != nil {
+		c.Error(err)
+		return err
+	}
+	repo, err := store.RepoLoad(c, repoID)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	config, err := store.ConfigFind(c, repo)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return err
+	}
+	return c.JSON(http.StatusOK, config)
+
+}
+
 func PostConfig(c echo.Context) error {
 	repoID, err := strconv.ParseInt(c.Param("repoID"), 10, 64)
 	if err != nil {
