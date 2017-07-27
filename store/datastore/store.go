@@ -46,7 +46,9 @@ func open(driver, config string) *sql.DB {
 	}
 	if driver == "mysql" {
 		// per issue https://github.com/go-sql-driver/mysql/issues/257
-		db.SetMaxIdleConns(0)
+		db.SetMaxOpenConns(200)                 // 用于设置最大打开的连接数，默认值为 0 表示不限制，一般实际值为 80% * 设置值。
+		db.SetMaxIdleConns(100)                 // 用于设置闲置的连接数。
+		db.SetConnMaxLifetime(time.Second * 60) // 闲置连接自动关闭的超时时间
 	}
 
 	setupMeddler(driver)
