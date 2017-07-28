@@ -420,6 +420,22 @@ func (b *builder) Build() ([]*buildItem, error) {
 			metadata.Sys.Arch = "linux/amd64"
 		}
 
+		match := []string{}
+		var secrets []compiler.Secret
+		secrets = append(secrets, compiler.Secret{
+			Name:  "password",
+			Value: "admin",
+			Match: match,
+		})
+
+		var registries []compiler.Registry
+		registries = append(registries, compiler.Registry{
+			Hostname: "172.24.6.219:40028",
+			Username: "admin",
+			Password: "admin",
+			Email:    "",
+		})
+
 		ir := compiler.New(
 			compiler.WithEnviron(environ),
 			compiler.WithEnviron(b.Envs),
@@ -436,8 +452,8 @@ func (b *builder) Build() ([]*buildItem, error) {
 				),
 				b.Repo.IsPrivate,
 			),
-			// compiler.WithRegistry(registries...),
-			// compiler.WithSecret(secrets...),
+			compiler.WithRegistry(registries...),
+			compiler.WithSecret(secrets...),
 			compiler.WithPrefix(
 				fmt.Sprintf(
 					"%d_%d",
