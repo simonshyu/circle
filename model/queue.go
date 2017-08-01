@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 
-	"github.com/SimonXming/queue"
 	"github.com/Sirupsen/logrus"
+	"github.com/simonshyu/queue"
 )
 
 // Task defines scheduled pipeline Task.

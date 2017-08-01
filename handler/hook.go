@@ -13,7 +13,7 @@ import (
 	"github.com/SimonXming/circle/utils/httputil"
 	"github.com/SimonXming/circle/utils/token"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
-	"github.com/SimonXming/queue"
+	"github.com/simonshyu/queue"
 
 	"github.com/labstack/echo"
 	"net/http"

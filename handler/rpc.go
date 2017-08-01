@@ -8,8 +8,8 @@ import (
 	"github.com/SimonXming/circle/store"
 	"github.com/SimonXming/logging"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
-	"github.com/SimonXming/queue"
 	"github.com/labstack/echo"
+	"github.com/simonshyu/queue"
 	"log"
 	"strconv"
 )

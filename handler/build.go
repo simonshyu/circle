@@ -20,7 +20,7 @@ import (
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/compiler"
 	"github.com/SimonXming/pipeline/pipeline/frontend/yaml/matrix"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
-	"github.com/SimonXming/queue"
+	"github.com/simonshyu/queue"
 
 	"github.com/labstack/echo"
 	"net/http"
