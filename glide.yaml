@@ -1,4 +1,4 @@
-package: github.com/SimonXming/circle
+package: github.com/simonshyu/circle
 import:
 - package: github.com/urfave/cli
   version: ^1.19.1
@@ -14,10 +14,9 @@ import:
   version: ^1.1.0
 - package: github.com/dgrijalva/jwt-go
   version: ^3.0.0
-- package: github.com/SimonXming/queue
-- package: github.com/SimonXming/pipeline
-  version: ^1.0.0-alpha
 - package: github.com/franela/goblin
   version: ^0.0.1
-- package: github.com/SimonXming/logging
 - package: github.com/simonshyu/queue
+- package: github.com/simonshyu/logging
+- package: github.com/simonshyu/pipeline
+  version: ^1.0.0-alpha

@@ -1,62 +1,103 @@
-package agent
+package main
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/simonshyu/pipeline/pipeline/interrupt"
-	"github.com/simonshyu/pipeline/pipeline/rpc"
-	"github.com/tevino/abool"
-	"github.com/urfave/cli"
+	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/url"
+	"os"
 	"strconv"
 	"sync"
 	"time"
-)
 
-import (
 	"github.com/simonshyu/pipeline/pipeline"
 	"github.com/simonshyu/pipeline/pipeline/backend"
 	"github.com/simonshyu/pipeline/pipeline/backend/docker"
+	"github.com/simonshyu/pipeline/pipeline/interrupt"
 	"github.com/simonshyu/pipeline/pipeline/multipart"
-	"io"
-	"os"
+	"github.com/simonshyu/pipeline/pipeline/rpc"
+
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/tevino/abool"
+	"github.com/urfave/cli"
 )
 
 const (
 	maxFileUpload = 5000000
 	maxLogsUpload = 5000000
-	maxProcs      = 1
-	retryLimit    = math.MaxInt32
 )
 
-// Command exports the agent command.
-var Command = cli.Command{
-	Name:   "agent",
-	Usage:  "starts the circle agent",
-	Action: loop,
+func main() {
+	app := cli.NewApp()
+	app.Name = "piped"
+	app.Usage = "piped stars a pipeline execution daemon"
+	app.Action = start
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "endpoint",
+			EnvVar: "PIPED_ENDPOINT,PIPED_SERVER",
+			Value:  "ws://localhost:9999",
+		},
+		cli.StringFlag{
+			Name:   "token",
+			EnvVar: "PIPED_TOKEN,PIPED_SECRET",
+		},
+		cli.DurationFlag{
+			Name:   "backoff",
+			EnvVar: "PIPED_BACKOFF",
+			Value:  time.Second * 15,
+		},
+		cli.IntFlag{
+			Name:   "retry-limit",
+			EnvVar: "PIPED_RETRY_LIMIT",
+			Value:  math.MaxInt32,
+		},
+		cli.StringFlag{
+			Name:   "platform",
+			EnvVar: "PIPED_PLATFORM",
+			Value:  "linux/amd64",
+		},
+		cli.Int64Flag{
+			Name:   "upload-limit",
+			EnvVar: "PIPED_UPLOAD_LIMIT",
+			Value:  math.MaxInt32,
+		},
+	}
+	app.Commands = []cli.Command{
+		onceCommand,
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func loop(c *cli.Context) error {
+func start(c *cli.Context) error {
 	endpoint, err := url.Parse(
-		"ws://localhost:8000/ws/broker",
+		c.String("endpoint"),
 	)
 	if err != nil {
 		return err
 	}
 	filter := rpc.Filter{
 		Labels: map[string]string{
-			"platform": "linux/amd64",
+			"platform": c.String("platform"),
 		},
 	}
+
 	client, err := rpc.NewClient(
 		endpoint.String(),
 		rpc.WithRetryLimit(
-			retryLimit,
+			c.Int("retry-limit"),
 		),
 		rpc.WithBackoff(
-			time.Second*15,
+			c.Duration("backoff"),
+		),
+		rpc.WithToken(
+			c.String("token"),
 		),
 	)
 	if err != nil {
@@ -71,40 +112,15 @@ func loop(c *cli.Context) error {
 		sigterm.Set()
 	})
 
-	var wg sync.WaitGroup
-	parallel := maxProcs
-	wg.Add(parallel)
-
-	for i := 0; i < parallel; i++ {
-		go func() {
-			defer wg.Done()
-			for {
-				if sigterm.IsSet() {
-					return
-				}
-				if err := run(ctx, client, filter); err != nil {
-					log.Printf("build runner encountered error: exiting: %s", err)
-					return
-				}
-			}
-		}()
+	for {
+		if sigterm.IsSet() {
+			return nil
+		}
+		if err := run(ctx, client, filter); err != nil {
+			return err
+		}
 	}
-	wg.Wait()
-	return nil
 }
-
-/*
-run 方法是 agent 的主要运行逻辑
-1. 获取一个 job
-2. 创建一个 docker engine
-3. 处理等待 job 完成的逻辑(正确或错误)
-4. 初始化 job
-5. 给本次 job 设置 logger 和 tracer
-6. 根据这次 job 的配置信息初始化 pipeline
-7. 运行 pipeline 并实时更新 pipeline 状态
-8. 完成 pipeline
-9. 通过 connection 同步 pipelone 状态
-*/
 
 func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	log.Println("pipeline: request next execution")
@@ -118,7 +134,9 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		return nil
 	}
 	log.Printf("pipeline: received next execution: %s", work.ID)
-
+	if os.Getenv("SUICIDE_MODE") != "" {
+		os.Exit(1)
+	}
 	// new docker engine
 	engine, err := docker.NewEnv()
 	if err != nil {
@@ -135,8 +153,9 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 
 	cancelled := abool.New()
 	go func() {
-		if werr := client.Wait(ctx, work.ID); werr != nil {
-			cancelled.SetTo(true)
+		werr := client.Wait(ctx, work.ID)
+		if werr != nil {
+			cancelled.SetTo(true) // TODO verify error is really an error
 			log.Printf("pipeline: cancel signal received: %s: %s", work.ID, werr)
 			cancel()
 		} else {
@@ -164,26 +183,23 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		log.Printf("pipeline: error signaling pipeline init: %s: %s", work.ID, err)
 	}
 
-	localLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
-		part, err := rc.NextPart()
-		if err != nil {
-			return err
-		}
-		io.Copy(os.Stderr, part)
-		return nil
-	})
-
 	var uploads sync.WaitGroup
 	defaultLogger := pipeline.LogFunc(func(proc *backend.Step, rc multipart.Reader) error {
-		part, err := rc.NextPart()
-		if err != nil {
-			return err
+		part, rerr := rc.NextPart()
+		if rerr != nil {
+			return rerr
 		}
-
 		uploads.Add(1)
 
+		var secrets []string
+		for _, secret := range work.Config.Secrets {
+			if secret.Mask {
+				secrets = append(secrets, secret.Value)
+			}
+		}
+
 		limitedPart := io.LimitReader(part, maxLogsUpload)
-		logstream := rpc.NewLineWriter(client, work.ID, proc.Alias)
+		logstream := rpc.NewLineWriter(client, work.ID, proc.Alias, secrets...)
 		io.Copy(logstream, limitedPart)
 
 		file := &rpc.File{}
@@ -205,7 +221,25 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 			uploads.Done()
 		}()
 
-		io.Copy(os.Stderr, part)
+		part, rerr = rc.NextPart()
+		if rerr != nil {
+			return nil
+		}
+		// TODO should be configurable
+		limitedPart = io.LimitReader(part, maxFileUpload)
+		file = &rpc.File{}
+		file.Mime = part.Header().Get("Content-Type")
+		file.Proc = proc.Alias
+		file.Name = part.FileName()
+		file.Data, _ = ioutil.ReadAll(limitedPart)
+		file.Size = len(file.Data)
+		file.Time = time.Now().Unix()
+
+		if serr := client.Upload(context.Background(), work.ID, file); serr != nil {
+			log.Printf("pipeline: cannot upload artifact: %s: %s: %s", work.ID, file.Mime, serr)
+		} else {
+			log.Printf("pipeline: finish uploading artifact: %s: step %s: %s", file.Mime, work.ID, proc.Alias)
+		}
 		return nil
 	})
 
@@ -231,6 +265,7 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 		state.Pipeline.Step.Environment["CI_BUILD_STATUS"] = "success"
 		state.Pipeline.Step.Environment["CI_BUILD_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
 		state.Pipeline.Step.Environment["CI_BUILD_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
+
 		state.Pipeline.Step.Environment["CI_JOB_STATUS"] = "success"
 		state.Pipeline.Step.Environment["CI_JOB_STARTED"] = strconv.FormatInt(state.Pipeline.Time, 10)
 		state.Pipeline.Step.Environment["CI_JOB_FINISHED"] = strconv.FormatInt(time.Now().Unix(), 10)
@@ -245,26 +280,30 @@ func run(ctx context.Context, client rpc.Peer, filter rpc.Filter) error {
 	err = pipeline.New(work.Config,
 		pipeline.WithContext(ctx),
 		pipeline.WithLogger(defaultLogger),
-		pipeline.WithLogger(localLogger),
 		pipeline.WithTracer(defaultTracer),
 		pipeline.WithEngine(engine),
 	).Run()
+
 	state.Finished = time.Now().Unix()
 	state.Exited = true
 	if err != nil {
-		switch xerr := err.(type) {
-		case *pipeline.ExitError:
+		state.Error = err.Error()
+		if xerr, ok := err.(*pipeline.ExitError); ok {
 			state.ExitCode = xerr.Code
-		default:
-			state.ExitCode = 1
-			state.Error = err.Error()
+		}
+		if xerr, ok := err.(*pipeline.OomError); ok {
+			state.ExitCode = xerr.Code
 		}
 		if cancelled.IsSet() {
-			state.ExitCode = 137
+			state.ExitCode = 130
+		} else if state.ExitCode == 0 {
+			state.ExitCode = 1
 		}
 	}
 
 	log.Printf("pipeline: execution complete: %s", work.ID)
+
+	uploads.Wait()
 
 	err = client.Done(context.Background(), work.ID, state)
 	if err != nil {

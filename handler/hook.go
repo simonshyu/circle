@@ -12,7 +12,7 @@ import (
 	"github.com/simonshyu/circle/store"
 	"github.com/simonshyu/circle/utils/httputil"
 	"github.com/simonshyu/circle/utils/token"
-	"github.com/SimonXming/pipeline/pipeline/rpc"
+	"github.com/simonshyu/pipeline/pipeline/rpc"
 	"github.com/simonshyu/queue"
 
 	"github.com/labstack/echo"

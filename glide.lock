@@ -1,162 +1,28 @@
-hash: 08860878829e84b87ce3c5eb658c2fba15560f6a7aabf4e63540c92a3fa0eda9
-updated: 2017-08-01T14:37:28.920352005+08:00
+hash: 66efe1cbdeac599a34264b35c67ee9f3ec09b473de8f718ffc77e501d4a854a7
+updated: 2017-08-01T16:42:35.873342674+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
-- name: github.com/docker/distribution
-  version: 91c507a39abfce14b5c8541cf284330e22208c0f
-  subpackages:
-  - digestset
-  - reference
-- name: github.com/docker/docker
-  version: 4ac4c8ef4b06ffa8ccd4fd3ae0f76e4ca820c1bc
-  subpackages:
-  - api
-  - api/types
-  - api/types/blkiodev
-  - api/types/container
-  - api/types/events
-  - api/types/filters
-  - api/types/image
-  - api/types/mount
-  - api/types/network
-  - api/types/registry
-  - api/types/strslice
-  - api/types/swarm
-  - api/types/swarm/runtime
-  - api/types/time
-  - api/types/versions
-  - api/types/volume
-  - client
-  - pkg/ioutils
-  - pkg/longpath
-  - pkg/mount
-  - pkg/stdcopy
-  - pkg/system
-  - pkg/tlsconfig
-  - reference
-- name: github.com/docker/go-connections
-  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
-  subpackages:
-  - nat
-  - sockets
-  - tlsconfig
-- name: github.com/docker/go-units
-  version: 0dadbb0345b35ec7ef35e228dabb8de89a65bf52
-- name: github.com/docker/libcompose
-  version: 1b708aac26a4fc6f9bff31728a8e3a252ef57dbd
-  subpackages:
-  - yaml
-- name: github.com/docker/libtrust
-  version: aabc10ec26b754e797f9028f4589c5b7bd90dc20
-- name: github.com/flynn/go-shlex
-  version: 3f9db97f856818214da2e1057f8ad84803971cff
 - name: github.com/franela/goblin
   version: 74c9fe110d4bfd04c222a089a309e0a97e258534
-- name: github.com/ghodss/yaml
-  version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
-- name: github.com/go-redis/redis
-  version: 2fb3f0e45fb2c55d79dd7e4b06b5281ae437debb
-  subpackages:
-  - internal
-  - internal/consistenthash
-  - internal/hashtag
-  - internal/pool
-  - internal/proto
 - name: github.com/go-sql-driver/mysql
   version: a0583e0143b1624142adab07e0e97fe106d99561
-- name: github.com/gogo/protobuf
-  version: 7b6c6391c4ff245962047fc1e2c6e08b1cdfa0e8
-  subpackages:
-  - proto
 - name: github.com/gorilla/securecookie
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
-- name: github.com/gorilla/websocket
-  version: a69d9f6de432e2c6b296a947d8a5ee88f68522cf
 - name: github.com/labstack/echo
   version: 1049c9613cd371b7ea8f219404c9a821734781ed
-  subpackages:
-  - middleware
-- name: github.com/labstack/gommon
-  version: 779b8a8b9850a97acba6a3fe20feb628c39e17c1
-  subpackages:
-  - bytes
-  - color
-  - log
-  - random
-- name: github.com/mattn/go-colorable
-  version: 3fa8c76f9daed4067e4a806fb7e4dc86455c6d6a
-- name: github.com/mattn/go-isatty
-  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
-- name: github.com/Microsoft/go-winio
-  version: c4dc1301f1dc0307acd38e611aa375a64dfe0642
-- name: github.com/opencontainers/go-digest
-  version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
-- name: github.com/opencontainers/image-spec
-  version: ef2b9a1d696677abd664a0879758d2b115b1ded3
-  subpackages:
-  - specs-go
-  - specs-go/v1
-- name: github.com/pkg/errors
-  version: c605e284fe17294bda444b34710735b29d1a9d90
 - name: github.com/russross/meddler
   version: 9515f6b01c158e6a98939d1ddfddb8a05544e08d
+- name: github.com/simonshyu/logging
+  version: 03b6463409fecbd23f04587adf9bc71da13796a2
+- name: github.com/simonshyu/pipeline
+  version: 6f08c15271e56771b22bb6c98d321032f626c236
 - name: github.com/simonshyu/queue
   version: 81c2dba42494c138644d34a05624e09c74fc5394
-  subpackages:
-  - redis
-- name: github.com/SimonXming/logging
-  version: 03b6463409fecbd23f04587adf9bc71da13796a2
-- name: github.com/SimonXming/pipeline
-  version: ebdd7744c223c28407276f8f01429e0c834ceabd
-  subpackages:
-  - pipeline
-  - pipeline/backend
-  - pipeline/backend/docker
-  - pipeline/frontend
-  - pipeline/frontend/yaml
-  - pipeline/frontend/yaml/compiler
-  - pipeline/frontend/yaml/matrix
-  - pipeline/frontend/yaml/types
-  - pipeline/interrupt
-  - pipeline/multipart
-  - pipeline/rpc
-- name: github.com/SimonXming/queue
-  version: 63b1974bbcc9b4b251ed18f88edc3a643eb64ff7
 - name: github.com/Sirupsen/logrus
   version: a3f95b5c423586578a4e099b11a46c2479628cac
-- name: github.com/sourcegraph/jsonrpc2
-  version: b02337b177765febba753be4b7d9c26e3a9fd220
-  subpackages:
-  - websocket
 - name: github.com/tevino/abool
   version: 3c25f2fe7cd0ef3eabefce1d90efd69a65d35b12
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
-- name: github.com/valyala/bytebufferpool
-  version: e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7
-- name: github.com/valyala/fasttemplate
-  version: dcecefd839c4193db0d35b88ec65b4c12d360ab0
-- name: golang.org/x/crypto
-  version: 6914964337150723782436d56b3f21610a74ce7b
-  subpackages:
-  - acme
-  - acme/autocert
-- name: golang.org/x/net
-  version: ab5485076ff3407ad2d02db054635913f017b0ed
-  subpackages:
-  - context
-  - context/ctxhttp
-  - proxy
-- name: golang.org/x/sync
-  version: f52d1811a62927559de87708c8913c1650ce4f26
-  subpackages:
-  - errgroup
-- name: golang.org/x/sys
-  version: c4489faa6e5ab84c0ef40d6ee878f7a030281f0f
-  subpackages:
-  - unix
-  - windows
-- name: gopkg.in/yaml.v2
-  version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 testImports: []
