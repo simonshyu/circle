@@ -35,6 +35,12 @@ func WithTaskStore(q queue.Queue, s TaskStore) queue.Queue {
 	return &persistentQueue{q, s}
 }
 
+// WithTaskStore returns a queue that is backed by the TaskStore. This
+// ensures the task Queue can be restored when the system starts.
+func WithTaskStoreRedis(q queue.Queue, s TaskStore) queue.Queue {
+	return &persistentQueue{q, s}
+}
+
 type persistentQueue struct {
 	queue.Queue
 	store TaskStore

@@ -35,5 +35,5 @@ func setupRedisQueue(c *cli.Context, s store.Store) queue.Queue {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	return model.WithTaskStore(redisConn, s)
+	return model.WithTaskStoreRedis(redisConn, s)
 }
