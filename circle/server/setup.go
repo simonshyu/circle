@@ -3,9 +3,9 @@
 package server
 
 import (
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/store/datastore"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/store"
+	"github.com/simonshyu/circle/store/datastore"
 	"github.com/simonshyu/queue"
 	"github.com/simonshyu/queue/redis"
 

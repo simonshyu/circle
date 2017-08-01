@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/SimonXming/circle/store/datastore/ddl/mysql"
+	"github.com/simonshyu/circle/store/datastore/ddl/mysql"
 )
 
 // Supported database drivers

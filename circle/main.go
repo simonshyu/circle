@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/SimonXming/circle/circle/agent"
-	"github.com/SimonXming/circle/circle/server"
+	"github.com/simonshyu/circle/circle/agent"
+	"github.com/simonshyu/circle/circle/server"
 	"github.com/urfave/cli"
 	"os"
 )

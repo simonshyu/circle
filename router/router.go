@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/SimonXming/circle/handler"
+	"github.com/simonshyu/circle/handler"
 	"github.com/labstack/echo"
 )
 

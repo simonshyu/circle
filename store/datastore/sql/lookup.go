@@ -1,7 +1,7 @@
 package sql
 
 import (
-	"github.com/SimonXming/circle/store/datastore/sql/mysql"
+	"github.com/simonshyu/circle/store/datastore/sql/mysql"
 )
 
 // Supported database drivers

@@ -7,7 +7,7 @@ import (
 	// "time"
 	"github.com/labstack/echo"
 
-	"github.com/SimonXming/circle/model"
+	"github.com/simonshyu/circle/model"
 )
 
 type Remote interface {

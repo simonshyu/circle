@@ -7,11 +7,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	"time"
 
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/remote"
-	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/utils/httputil"
-	"github.com/SimonXming/circle/utils/token"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/remote"
+	"github.com/simonshyu/circle/store"
+	"github.com/simonshyu/circle/utils/httputil"
+	"github.com/simonshyu/circle/utils/token"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/simonshyu/queue"
 

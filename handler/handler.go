@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"context"
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/store"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/store"
 	"github.com/labstack/echo"
 	"net/http"
 	"strconv"

@@ -2,10 +2,10 @@ package server
 
 import (
 	// "fmt"
-	ciserver "github.com/SimonXming/circle/handler"
-	"github.com/SimonXming/circle/router"
-	cimiddleware "github.com/SimonXming/circle/router/middleware"
-	"github.com/SimonXming/circle/store"
+	ciserver "github.com/simonshyu/circle/handler"
+	"github.com/simonshyu/circle/router"
+	cimiddleware "github.com/simonshyu/circle/router/middleware"
+	"github.com/simonshyu/circle/store"
 	"github.com/SimonXming/logging"
 	"github.com/labstack/echo/middleware"
 	"github.com/urfave/cli"

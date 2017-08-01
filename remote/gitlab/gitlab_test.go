@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	// "github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/remote/gitlab/testdata"
+	// "github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/remote/gitlab/testdata"
 	"github.com/franela/goblin"
 )
 

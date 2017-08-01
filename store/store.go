@@ -3,8 +3,8 @@ package store
 import (
 	"io"
 
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/utils"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/utils"
 	"github.com/labstack/echo"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SimonXming/circle/remote/gitlab/client"
+	"github.com/simonshyu/circle/remote/gitlab/client"
 )
 
 const (

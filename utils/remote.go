@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/remote"
-	"github.com/SimonXming/circle/remote/gitlab"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/remote"
+	"github.com/simonshyu/circle/remote/gitlab"
 )
 
 func SetupRemote(c echo.Context, account *model.ScmAccount) error {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/SimonXming/circle/store"
-	"github.com/SimonXming/circle/store/datastore/ddl"
+	"github.com/simonshyu/circle/store"
+	"github.com/simonshyu/circle/store/datastore/ddl"
 	"github.com/russross/meddler"
 
 	"github.com/Sirupsen/logrus"

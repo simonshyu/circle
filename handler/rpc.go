@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/store"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/store"
 	"github.com/SimonXming/logging"
 	"github.com/SimonXming/pipeline/pipeline/rpc"
 	"github.com/labstack/echo"
@@ -94,7 +94,7 @@ func (s *RPC) Next(c context.Context, filter rpc.Filter) (*rpc.Pipeline, error) 
 	err = json.Unmarshal(task.Data, pipeline)
 
 	// Output next process workon in json
-	path := "/Users/simon/Code/go/src/github.com/SimonXming/circle/test/next_task_data.json"
+	path := "/Users/simon/Code/go/src/github.com/simonshyu/circle/test/next_task_data.json"
 	pipelineJson, _ := json.Marshal(pipeline)
 	err = ioutil.WriteFile(path, pipelineJson, 0644)
 

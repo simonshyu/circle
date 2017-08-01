@@ -2,9 +2,9 @@ package gitlab
 
 import (
 	"fmt"
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/remote"
-	"github.com/SimonXming/circle/remote/gitlab/client"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/remote"
+	"github.com/simonshyu/circle/remote/gitlab/client"
 	"io/ioutil"
 	"net"
 	"net/http"

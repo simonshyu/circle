@@ -2,8 +2,8 @@ package datastore
 
 import (
 	"bytes"
-	"github.com/SimonXming/circle/model"
-	"github.com/SimonXming/circle/store/datastore/sql"
+	"github.com/simonshyu/circle/model"
+	"github.com/simonshyu/circle/store/datastore/sql"
 	"github.com/russross/meddler"
 	"io"
 	"io/ioutil"

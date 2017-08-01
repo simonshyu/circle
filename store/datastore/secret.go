@@ -1,7 +1,7 @@
 package datastore
 
 import (
-	"github.com/SimonXming/circle/model"
+	"github.com/simonshyu/circle/model"
 	"github.com/russross/meddler"
 )
 

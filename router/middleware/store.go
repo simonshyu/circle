@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/SimonXming/circle/store"
+	"github.com/simonshyu/circle/store"
 	"github.com/labstack/echo"
 	// "github.com/labstack/echo/middleware"
 )
