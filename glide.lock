@@ -1,5 +1,5 @@
 hash: 66efe1cbdeac599a34264b35c67ee9f3ec09b473de8f718ffc77e501d4a854a7
-updated: 2017-08-01T17:05:15.865323686+08:00
+updated: 2017-08-01T18:07:48.473826317+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
@@ -118,7 +118,7 @@ imports:
   - pipeline/multipart
   - pipeline/rpc
 - name: github.com/simonshyu/queue
-  version: 81c2dba42494c138644d34a05624e09c74fc5394
+  version: 5f178b1f7fc0eb16ac725e31bd847e73f64af8cc
   subpackages:
   - redis
 - name: github.com/Sirupsen/logrus

@@ -47,7 +47,7 @@ func server(c *cli.Context) error {
 func setupEvilGlobals(c *cli.Context, v store.Store) {
 	// storage
 	ciserver.Config.Storage.Config = v
-	ciserver.Config.Services.Queue = setupQueue(c, v)
+	ciserver.Config.Services.Queue = setupRedisQueue(c, v)
 	ciserver.Config.Services.Logs = logging.New()
 
 	ciserver.Config.Pipeline.Limits.MemSwapLimit = 0

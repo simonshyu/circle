@@ -3,12 +3,17 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/go-redis/redis"
 	"sync"
 	"time"
 
 	"github.com/simonshyu/queue"
 )
+
+const POP_TIMEOUT = 0 // 0 == Blocking forever
+
+var ErrDeadLine = errors.New("queue: deadline received")
 
 type entry struct {
 	item     *queue.Task
@@ -21,21 +26,30 @@ type entry struct {
 type conn struct {
 	sync.Mutex
 
-	// opts   *Options
+	opts      *Options
 	client    *redis.Client
 	running   map[string]*entry
 	extension time.Duration
 }
 
-func New() (queue.Queue, error) {
+func New(opts ...Option) (queue.Queue, error) {
 	conn := new(conn)
 	// 初始化 running
 	conn.running = map[string]*entry{}
 	conn.extension = time.Minute * 10
+	// conn.extension = time.Second * 10
+
+	conn.opts = new(Options)
+	conn.opts.queueName = "task-queue"
+	for _, opt := range opts {
+		// 初始化 options
+		opt(conn.opts)
+	}
+
 	conn.client = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     conn.opts.addr,
+		Password: conn.opts.password, // no password set
+		DB:       conn.opts.db,       // use default DB
 	})
 
 	return conn, nil
@@ -44,26 +58,28 @@ func New() (queue.Queue, error) {
 // Push pushes an task to the tail of this queue.
 // 1. Task => Undone list(Redis)
 func (c *conn) Push(ctx context.Context, task *queue.Task) error {
-	out, err := json.Marshal(task)
+	taskRaw, err := json.Marshal(task)
 	if err != nil {
 		return err
 	}
-	err = c.client.LPush("channel-undone", out).Err()
+	err = c.client.LPush(c.opts.queueName, taskRaw).Err()
 	if err != nil {
 		return err
 	}
+	go c.tracking()
 	return nil
 }
 
 // 2. Undone list(Redis) => Task
 func (c *conn) Poll(ctx context.Context, f queue.Filter) (*queue.Task, error) {
-	result, err := c.client.BLPop(0, "channel-undone").Result()
+	result, err := c.client.BLPop(POP_TIMEOUT, c.opts.queueName).Result()
 	if err != nil {
 		return nil, err
 	}
+	taskRawData := result[1]
 
 	task := new(queue.Task)
-	err = json.Unmarshal([]byte(result[1]), task)
+	err = json.Unmarshal([]byte(taskRawData), task)
 	if err != nil {
 		return nil, err
 	}
@@ -73,13 +89,21 @@ func (c *conn) Poll(ctx context.Context, f queue.Filter) (*queue.Task, error) {
 		deadline: time.Now().Add(c.extension),
 	}
 
+	go c.tracking()
 	return task, nil
 }
 
 // Extend extends the deadline for a task.
 func (c *conn) Extend(ctx context.Context, id string) error {
-	println("Try extend deadline %v", 600)
-	return nil
+	c.Lock()
+	defer c.Unlock()
+
+	task, ok := c.running[id]
+	if ok {
+		task.deadline = time.Now().Add(c.extension)
+		return nil
+	}
+	return queue.ErrNotFound
 }
 
 // Done signals the task is complete.
@@ -123,6 +147,28 @@ func (c *conn) Wait(ctx context.Context, id string) error {
 
 // Info returns internal queue information.
 func (c *conn) Info(ctx context.Context) queue.InfoT {
-	// TODO this will be different for gcp
-	return queue.InfoT{}
+	c.Lock()
+	stats := queue.InfoT{}
+	stats.Stats.Running = len(c.running)
+	for _, entry := range c.running {
+		stats.Running = append(stats.Running, entry.item)
+	}
+	c.Unlock()
+	return stats
+}
+
+// every call this method will checking if task.deadline is arrived.
+func (c *conn) tracking() {
+	c.Lock()
+	defer c.Unlock()
+
+	// TODO(bradrydzewski) move this to a helper function
+	// push items to the front of the queue if the item expires.
+	for id, task := range c.running {
+		if time.Now().After(task.deadline) {
+			task.error = ErrDeadLine
+			delete(c.running, id)
+			close(task.done)
+		}
+	}
 }

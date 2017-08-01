@@ -8,6 +8,7 @@ import (
 	"github.com/simonshyu/circle/store/datastore"
 	"github.com/simonshyu/queue"
 	"github.com/simonshyu/queue/redis"
+	"log"
 
 	"github.com/urfave/cli"
 )
@@ -25,9 +26,14 @@ func setupQueue(c *cli.Context, s store.Store) queue.Queue {
 }
 
 func setupRedisQueue(c *cli.Context, s store.Store) queue.Queue {
-	redisConn, err := redis.New()
+	redisConn, err := redis.New(
+		redis.WithRedisAddr("localhost:6379"),
+		redis.WithRedisPassword(""),
+		redis.WithRedisDB(0),
+		redis.WithRedisQueueName("task-queue"),
+	)
 	if err != nil {
-		return nil
+		log.Fatalln(err.Error())
 	}
 	return model.WithTaskStore(redisConn, s)
 }
