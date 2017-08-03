@@ -140,10 +140,10 @@ func (t *Client) call(ctx context.Context, name string, req, res interface{}) er
 	if err := t.conn.Call(ctx, name, req, res); err == nil {
 		return nil
 	} else if err != jsonrpc2.ErrClosed && err != io.ErrUnexpectedEOF {
-		log.Printf("rpc: error making call: %s", err)
+		log.Printf("rpc: error making call <%s>: %s", name, err)
 		return err
 	} else {
-		log.Printf("rpc: error making call: connection closed: %s", err)
+		log.Printf("rpc: error making call <%s>: connection closed: %s", name, err)
 	}
 	if err := t.openRetry(); err != nil {
 		return err

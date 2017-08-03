@@ -27,10 +27,10 @@ func setupQueue(c *cli.Context, s store.Store) queue.Queue {
 
 func setupRedisQueue(c *cli.Context, s store.Store) queue.Queue {
 	redisConn, err := redis.New(
-		redis.WithRedisAddr("localhost:6379"),
-		redis.WithRedisPassword(""),
-		redis.WithRedisDB(0),
-		redis.WithRedisQueueName("task-queue"),
+		redis.WithAddr("localhost:6379"),
+		redis.WithPassword(""),
+		redis.WithDB(0),
+		redis.WithPenddingQueueName("pending-queue"),
 	)
 	if err != nil {
 		log.Fatalln(err.Error())
