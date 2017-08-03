@@ -64,6 +64,14 @@ var migrations = []struct {
 		name: "create-index-files-procs",
 		stmt: createIndexFilesProcs,
 	},
+	{
+		name: "create-table-registry",
+		stmt: createTableRegistry,
+	},
+	{
+		name: "create-index-registry-repo",
+		stmt: createIndexRegistryRepo,
+	},
 }
 
 // Migrate performs the database migration. If the migration fails
@@ -222,10 +230,7 @@ CREATE TABLE IF NOT EXISTS secrets (
  secret_id          INTEGER PRIMARY KEY AUTO_INCREMENT
 ,secret_repo_id     INTEGER
 ,secret_name        VARCHAR(250)
-,secret_is_default  BOOLEAN
 ,secret_value       MEDIUMBLOB
-
-,UNIQUE(secret_is_default, secret_repo_id)
 );
 `
 
@@ -327,4 +332,26 @@ CREATE INDEX file_build_ix ON files (file_build_id);
 
 var createIndexFilesProcs = `
 CREATE INDEX file_proc_ix  ON files (file_proc_id);
+`
+
+//
+// 10_create_table_registry.sql
+//
+
+var createTableRegistry = `
+CREATE TABLE IF NOT EXISTS registry (
+ registry_id        INTEGER PRIMARY KEY AUTO_INCREMENT
+,registry_repo_id   INTEGER
+,registry_addr      VARCHAR(250)
+,registry_email     VARCHAR(500)
+,registry_username  VARCHAR(2000)
+,registry_password  VARCHAR(8000)
+,registry_token     VARCHAR(2000)
+
+,UNIQUE(registry_addr, registry_repo_id)
+);
+`
+
+var createIndexRegistryRepo = `
+CREATE INDEX ix_registry_repo ON registry (registry_repo_id);
 `

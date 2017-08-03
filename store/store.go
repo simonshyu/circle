@@ -3,9 +3,9 @@ package store
 import (
 	"io"
 
+	"github.com/labstack/echo"
 	"github.com/simonshyu/circle/model"
 	"github.com/simonshyu/circle/utils"
-	"github.com/labstack/echo"
 )
 
 type Store interface {
@@ -25,6 +25,7 @@ type Store interface {
 	GetRepoScmName(int64, string) (*model.Repo, error)
 
 	SecretCreate(*model.Secret) error
+	SecretUpdate(*model.Secret) error
 
 	BuildCreate(*model.Build, ...*model.Proc) error
 	BuildFind(*model.Repo) ([]*model.Build, error)
@@ -45,6 +46,9 @@ type Store interface {
 
 	LogFind(*model.Proc) (io.ReadCloser, error)
 	LogSave(*model.Proc, io.Reader) error
+
+	RegistryCreate(*model.Registry) error
+	RegistryUpdate(*model.Registry) error
 }
 
 func ScmAccountCreate(c echo.Context, account *model.ScmAccount) error {
@@ -89,6 +93,10 @@ func GetRepoScmIDOwnerName(c echo.Context, scmID int64, owner, name string) (*mo
 
 func SecretCreate(c echo.Context, secret *model.Secret) error {
 	return FromContext(c).SecretCreate(secret)
+}
+
+func SecretUpdate(c echo.Context, secret *model.Secret) error {
+	return FromContext(c).SecretUpdate(secret)
 }
 
 func BuildCreate(c echo.Context, build *model.Build, procs ...*model.Proc) error {
@@ -137,6 +145,14 @@ func ProcClear(c echo.Context, build *model.Build) error {
 
 func LogFind(c echo.Context, proc *model.Proc) (io.ReadCloser, error) {
 	return FromContext(c).LogFind(proc)
+}
+
+func RegistryCreate(c echo.Context, registry *model.Registry) error {
+	return FromContext(c).RegistryUpdate(registry)
+}
+
+func RegistryUpdate(c echo.Context, registry *model.Registry) error {
+	return FromContext(c).RegistryUpdate(registry)
 }
 
 // helper: 合并 ScmAccountLoad 和 SetupRemote 的功能
